@@ -64,6 +64,7 @@ class ForwardChaining(LogicEngine):
         """
         # define the list of results
         res = [None] * len(queries)
+        print("!!!!,", len(queries))
         # check if already cached:
         if self.caching_used:
             for q in range(len(queries)):

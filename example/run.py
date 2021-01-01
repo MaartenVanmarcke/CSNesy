@@ -18,7 +18,7 @@ logger = TensorBoardLogger(save_dir="logs/", name="model")
 
 # STEP 1: define the desired n_digits and n_classes
 n_digits = 2
-n_classes = 3
+n_classes = 2
 
 #STEP 2: construct the train, test-set and the neural_predicates
 task_train = BaseConverter(n=n_digits,n_classes=n_classes)
@@ -38,7 +38,7 @@ additional_logs_per_class = False
 model = NeSyModel(program=task_train.program,
                   logic_engine=ForwardChaining(tree_caching),
                   neural_predicates=neural_predicates,
-                  label_semantics=SumProductSemiring(),use_nn_caching=use_nn_caching,n_classes=n_classes,nb_solutions=task_train.max_value_term+2,
+                  label_semantics=SumProductSemiring(),use_nn_caching=use_nn_caching,n_classes=n_classes,nb_solutions=0,
                   additional_logs_per_class=additional_logs_per_class)
 
 if use_validation_set:
@@ -48,7 +48,7 @@ else:
 batch_size = 64
 print(task_train.program)
 #STEP 6: fit the model with train and validation data
-trainer.fit(model=model,
-            train_dataloaders=task_train.dataloader(batch_size=batch_size),
-            val_dataloaders=task_test.dataloader(batch_size=batch_size))
+# trainer.fit(model=model,
+#             train_dataloaders=task_train.dataloader(batch_size=batch_size),
+#             val_dataloaders=task_test.dataloader(batch_size=batch_size))
 
