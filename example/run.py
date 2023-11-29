@@ -3,11 +3,11 @@ import pathlib
 import os
 current = pathlib.Path().absolute()
 sys.path.insert(0,os.path.join(current, 'src'))
-sys.path.insert(0,os.path.join(current, 'src','nesy'))
-from nesy.model import NeSyModel, MNISTEncoder
+#
+from src.nesy.model import NeSyModel, MNISTEncoder
 from dataset import AdditionTask
-from nesy.logic import ForwardChaining
-from nesy.semantics import SumProductSemiring
+from src.nesy.logic import ForwardChaining
+from src.nesy.semantics import SumProductSemiring
 
 import torch
 import pytorch_lightning as pl

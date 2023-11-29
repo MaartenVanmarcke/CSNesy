@@ -3,9 +3,7 @@ import pathlib
 import os
 current = pathlib.Path().absolute()
 sys.path.insert(0,os.path.join(current, 'src'))
-sys.path.insert(0,os.path.join(current, 'src','nesy'))
-#
-from nesy.parser import parse_program, parse_clause
+from src.nesy.parser import parse_program, parse_clause
 
 import torch
 from torch.utils.data import Dataset, DataLoader
