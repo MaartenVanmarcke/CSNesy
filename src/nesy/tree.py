@@ -126,6 +126,6 @@ class NeuralNode(LeafNode):
         for the given input.
         """
         return self.model(tensor_sources["images"][:,self.index])[:, self.query]
-        ## TODO: how to check if it is between 0 and 1?
+        ## TODO: how to check if it is between 0 and 1? -> always the case since a softmax is the last layer of the nn
 
 
