@@ -3,7 +3,8 @@ import pathlib
 import os
 current = pathlib.Path().absolute()
 sys.path.insert(0,os.path.join(current, 'src'))
-from src.nesy.parser import parse_program, parse_clause
+sys.path.insert(0,os.path.join(current, 'src', 'nesy'))
+from nesy.parser import parse_program, parse_clause
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -35,8 +36,8 @@ class AdditionTask(Dataset):
                 self.original_targets.append(y)
         self.original_images = torch.stack(self.original_images)
         self.original_targets = torch.tensor(self.original_targets)
-        self.n_classes = n_classes
-        self.num_digits = n
+        self.n_classes = n_classes # number of possible results of the sum
+        self.num_digits = n # number of digits to sum together
         program_string = "addition(X,Y,Z) :- digit(X,N1), digit(Y,N2), add(N1,N2,Z).\n"
         program_string += "\n".join(
             [f"add({x}, {y}, {x + y})." for x in range(self.n_classes) for y in range(self.n_classes)])
