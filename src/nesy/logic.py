@@ -31,13 +31,3 @@ class ForwardChaining(LogicEngine):
         ])
 
         return and_or_tree
-
-'''
-Node() abstract ; self.evaluate(dataTensor, semantics)
-    - InternalNode(list[Node]) abstract
-        - OR(list[Node])
-        - AND(list[Node])
-    - Leaf abstract
-        - NeuralLeaf(model, index, query)  # example: NeuralLeaf(digitModel, 1, 0) for parse_term "digit(tensor(images,1), 0)"
-        - FactLeaf(weight)
-'''
