@@ -1,23 +1,23 @@
-from nesy.term import Term, Variable, Fact
+from nesy.term import Term, Variable
 from nesy.substituer import Substituer
 
 class Unifier():
     """
     A class that concerns unifying terms and variables. (self.unify())
-    There is also functionality for unifying two lists of terms and variables and facts. (self.unifyMultiple())
+    There is also functionality for unifying two lists of terms and variables. (self.unifyMultiple())
     """
 
     def __init__(self) -> None:
         self.substituer = Substituer()
 
-    def unifyMultiple(self, s: list[Term|Variable|Fact], t: list[Term|Variable|Fact]) -> list[tuple[Variable, Term | Variable]]:
+    def unifyMultiple(self, s: list[Term|Variable], t: list[Term|Variable]) -> list[tuple[Variable, Term | Variable]]:
         """
         Unify two lists. This means that the most general unifier S is found such that for each element x in s and y in t the following holds: S(x) = S(y)
 
         Arguments
         ---------
-            s: A list of terms, variables and facts.
-            t: A list of terms, variables and facts.
+            s: A list of terms and variables.
+            t: A list of terms and variables.
 
         Returns
         -------
@@ -27,37 +27,24 @@ class Unifier():
 
         if len(s) != len(t):
             raise ValueError("The given lists do not have the same length.")
-        mgu = []
-        for i in range(len(s)):
-            # If an element is a fact, then just check if they are equal. If not: return None; else: go to the next elements
-            if isinstance(s[i], Fact):
-                if s[i] != t[i]:
-                    return None
-            else:
-                mgu.append(s[i], t[i])
+        mgu = [(s[i], t[i]) for i in range(len(s))]
         return self._unifyLoop(mgu)
 
-    def unify(self, s: Term|Variable|Fact, t: Term|Variable|Fact) -> list[tuple[Variable, Term | Variable]]:
+    def unify(self, s: Term|Variable, t: Term|Variable) -> list[tuple[Variable, Term | Variable]]:
         """
         Unify two terms or variables. This means that the most general unifier S is found such that S(s) = S(t)
 
         Arguments
         ---------
-            s: A term, fact or a variable
-            t: A term, fact or a variable
+            s: A term or a variable
+            t: A term or a variable
 
         Returns
         -------
-            The most general unification between the two terms, facts or variables. If no such mgu is found, return None.
+            The most general unification between the two terms or variables. If no such mgu is found, return None.
 
         """
-        # If s is a fact, check if t is the same fact and if so, return an empty substitution.
-        if isinstance(s, Fact):
-            if s==t:
-                return []
-            else:
-                return None
-            
+        
         mgu = [(s, t)]
         return self._unifyLoop(mgu)
 
