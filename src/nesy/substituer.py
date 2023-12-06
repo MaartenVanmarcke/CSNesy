@@ -1,21 +1,21 @@
-from nesy.term import Term, Variable, Clause
+from nesy.term import Term, Variable, Clause, Fact
 
 class Substituer():
     """
-    A class that concerns applying substitutions on clauses, terms and variables.
+    A class that concerns applying substitutions on clauses, terms, facts and variables.
     """
 
     def __init__(self) -> None:
         pass
 
-    def substitution(self, substitution: list[tuple[Variable, Term|Variable|Clause]], query: Term|Variable|Clause):
+    def substitution(self, substitution: list[tuple[Variable, Term|Variable|Clause]], query: Term|Variable|Clause|Fact):
         """
         Apply the given substitution on the query.
 
         Arguments
         ---------
             substitution: A list of tuples in which the first element is a variable and the second element is its substitution, that satisfies the method self._isValidSubstition
-            query: A term, clause or variable on which you want to apply the substitution.
+            query: A term, clause, fact or variable on which you want to apply the substitution.
 
         Returns
         -------
@@ -45,7 +45,7 @@ class Substituer():
             
         return True
 
-    def replace(self, s: Variable, t: Term | Variable, u: Variable | Clause | Term) -> tuple[Variable | Clause | Term, bool]:
+    def replace(self, s: Variable, t: Term | Variable, u: Variable | Clause | Term | Fact) -> tuple[Variable | Clause | Term | Fact, bool]:
         """
         Replace s by t in u. 
 
@@ -53,7 +53,7 @@ class Substituer():
         ---------
             s: A variable
             t: A term or variable to replace s with in u
-            u: A variable, clause or term
+            u: A variable, clause, fact or term
 
         Returns
         -------
