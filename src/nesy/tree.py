@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from semantics import Semantics
+from nesy.semantics import Semantics
 from torch import Tensor
 from torch.nn import Module
 
@@ -40,6 +40,13 @@ class InternalNode(AndOrTreeNode):
     @abstractmethod
     def evaluate(self, tensor_sources: Tensor, semantics: Semantics):
         pass
+
+    def __repr__(self) -> str:
+        res = "- " + str(self.__class__.__name__)
+        c1 = str(self.child1).split('\n')
+        c2 = str(self.child2).split('\n')
+        res += "\n\t|" + "\n\t|".join(c1) + "\n\t|" + "\n\t".join(c2) 
+        return res
 
 class ORNode(InternalNode):
     ''' 
@@ -98,6 +105,11 @@ class FactNode(LeafNode):
         self.weight = weight
         self.positive = positive
 
+    def __repr__(self) -> str:
+        res ="- " +  str(self.__class__.__name__)
+        res += "\n\t - " + str(self.weight) + "\n\t - " + str(self.positive)
+        return res
+
     def evaluate(self, tensor_sources: Tensor, semantics: Semantics):
         """
         The evaluation of a weighted fact leaf node is: 
@@ -119,6 +131,11 @@ class NeuralNode(LeafNode):
         self.model = model
         self.index = index  
         self.query = query
+
+    def __repr__(self) -> str:
+        res = "- " + str(self.__class__.__name__)
+        res += "\n\t - " + str(self.model) + "\n\t - " + str(self.index) + "\n\t - " + str(self.query)
+        return res
 
     def evaluate(self, tensor_sources: Tensor, semantics: Semantics):
         """
