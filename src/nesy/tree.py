@@ -18,6 +18,9 @@ class AndOrTreeNode(ABC):
     An abstract class representing a generic node of an And Or Tree.\n
     The tree is represented by the root node.
     '''
+    def __init__(self, name="") -> None:
+        self.name = name
+        super().__init__()
 
     @abstractmethod
     def evaluate(self, tensor_sources: Tensor, semantics: Semantics):
@@ -32,8 +35,8 @@ class InternalNode(AndOrTreeNode):
     Each internal node has 2 child nodes.
     '''
     
-    def __init__(self, child1: AndOrTreeNode, child2: AndOrTreeNode) -> None:
-        super().__init__()
+    def __init__(self, child1: AndOrTreeNode, child2: AndOrTreeNode, name:str="") -> None:
+        super().__init__(name)
         self.child1 = child1
         self.child2 = child2
 
@@ -42,7 +45,7 @@ class InternalNode(AndOrTreeNode):
         pass
 
     def __repr__(self) -> str:
-        res = "- " + str(self.__class__.__name__)
+        res = "- " + str(self.__class__.__name__) + " : " + self.name
         c1 = str(self.child1).split('\n')
         c2 = str(self.child2).split('\n')
         res += "\n\t|" + "\n\t|".join(c1) + "\n\t|" + "\n\t".join(c2) 
@@ -53,8 +56,8 @@ class ORNode(InternalNode):
     A class representing an OR node of an And Or Tree.\n
     '''
 
-    def __init__(self, child1: AndOrTreeNode, child2: AndOrTreeNode) -> None:
-        super().__init__(child1, child2)
+    def __init__(self, child1: AndOrTreeNode, child2: AndOrTreeNode, name:str="") -> None:
+        super().__init__(child1, child2, name)
 
     def evaluate(self, tensor_sources: Tensor, semantics: Semantics):
         """
@@ -70,8 +73,8 @@ class ANDNode(InternalNode):
     A class representing an AND node of an And Or Tree.\n
     '''
 
-    def __init__(self, child1: AndOrTreeNode, child2: AndOrTreeNode) -> None:
-        super().__init__(child1, child2)
+    def __init__(self, child1: AndOrTreeNode, child2: AndOrTreeNode, name:str="") -> None:
+        super().__init__(child1, child2, name)
 
     def evaluate(self, tensor_sources: Tensor, semantics: Semantics):
         """
@@ -98,16 +101,17 @@ class FactNode(LeafNode):
     Such a leaf node has a weight and a bool that denotes whether this is a positive or a negated fact.
     '''
 
-    def __init__(self, weight, positive: bool = True) -> None:
-        super().__init__()
+    def __init__(self, weight, positive: bool = True, name:str="") -> None:
+        super().__init__(name)
         if weight < 0 or weight > 1:
             raise ValueError("The given weight is not between 0 and 1.")
         self.weight = weight
         self.positive = positive
+        self.str = str
 
     def __repr__(self) -> str:
-        res ="- " +  str(self.__class__.__name__)
-        res += "\n\t - " + str(self.weight) + "\n\t - " + str(self.positive)
+        res ="- " +  str(self.__class__.__name__) + " : " + self.name
+        res += "\n\t - " + str(self.weight) + "\n\t - " + str(self.positive) # TODO
         return res
 
     def evaluate(self, tensor_sources: Tensor, semantics: Semantics):
@@ -126,14 +130,14 @@ class NeuralNode(LeafNode):
     Such a leaf node has a network model, an index that denodes which tensor is the input of this node 
      and a query that denotes for which result of the network we want the probability.
     '''
-    def __init__(self, model: Module, index: int, query) -> None:
-        super().__init__()
+    def __init__(self, model: Module, index: int, query, name:str="") -> None:
+        super().__init__(name)
         self.model = model
         self.index = index  
         self.query = query
 
     def __repr__(self) -> str:
-        res = "- " + str(self.__class__.__name__)
+        res = "- " + str(self.__class__.__name__) + " : " + self.name
         res += "\n\t - " + str(self.model) + "\n\t - " + str(self.index) + "\n\t - " + str(self.query)
         return res
 
