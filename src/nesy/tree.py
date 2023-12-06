@@ -117,7 +117,7 @@ class NeuralNode(LeafNode):
     def __init__(self, model: Module, index: int, query) -> None:
         super().__init__()
         self.model = model
-        self.index = index
+        self.index = index  
         self.query = query
 
     def evaluate(self, tensor_sources: Tensor, semantics: Semantics):
