@@ -65,6 +65,7 @@ class AdditionTask(Dataset):
             # Therefore, we have a List[Term], each element of the list correspond to a single pair of images
 
             query = parse_program("addition(tensor(images, 0), tensor(images,1), {}).".format(target))[0].term
+           
             tensor_sources = {"images": images}
 
             return tensor_sources, query, torch.tensor([1.0])
