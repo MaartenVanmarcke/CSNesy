@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+
+import torch
 from nesy.semantics import Semantics
 from torch import Tensor
 from torch.nn import Module
@@ -23,9 +25,9 @@ class AndOrTreeNode(ABC):
         super().__init__()
 
     @abstractmethod
-    def evaluate(self, tensor_sources: Tensor, semantics: Semantics):
+    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates:torch.nn.ModuleDict):
         """
-        An abstract method that evaluates this node for an input (tensor_sources) and for some given semantics.
+        An abstract method that evaluates this node for an input (tensor_sources) and for some given semantics and NN.
         """
         pass
 
@@ -41,7 +43,7 @@ class InternalNode(AndOrTreeNode):
         self.child2 = child2
 
     @abstractmethod
-    def evaluate(self, tensor_sources: Tensor, semantics: Semantics):
+    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates:torch.nn.ModuleDict):
         pass
 
     def __repr__(self) -> str:
@@ -59,12 +61,12 @@ class ORNode(InternalNode):
     def __init__(self, child1: AndOrTreeNode, child2: AndOrTreeNode, name:str="") -> None:
         super().__init__(child1, child2, name)
 
-    def evaluate(self, tensor_sources: Tensor, semantics: Semantics):
+    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates:torch.nn.ModuleDict):
         """
         The evaluation of an OR node consists of the evaluation of both child nodes and a disjunction of their results as specified by the given semantics.
         """
-        res1 = self.child1.evaluate(tensor_sources, semantics)
-        res2 = self.child2.evaluate(tensor_sources, semantics)
+        res1 = self.child1.evaluate(tensor_sources, semantics,neural_predicates)
+        res2 = self.child2.evaluate(tensor_sources, semantics,neural_predicates)
         return semantics.disjunction(res1, res2)
     
 
@@ -76,12 +78,12 @@ class ANDNode(InternalNode):
     def __init__(self, child1: AndOrTreeNode, child2: AndOrTreeNode, name:str="") -> None:
         super().__init__(child1, child2, name)
 
-    def evaluate(self, tensor_sources: Tensor, semantics: Semantics):
+    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates:torch.nn.ModuleDict):
         """
         The evaluation of an AND node consists of the evaluation of both child nodes and a condjunction of their results as specified by the given semantics.
         """
-        res1 = self.child1.evaluate(tensor_sources, semantics)
-        res2 = self.child2.evaluate(tensor_sources, semantics)
+        res1 = self.child1.evaluate(tensor_sources, semantics,neural_predicates)
+        res2 = self.child2.evaluate(tensor_sources, semantics,neural_predicates)
         return semantics.conjunction(res1, res2)
 
 
@@ -92,7 +94,7 @@ class LeafNode(AndOrTreeNode):
     '''
     
     @abstractmethod
-    def evaluate(self, tensor_sources: Tensor, semantics: Semantics):
+    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates:torch.nn.ModuleDict):
         pass
 
 class FactNode(LeafNode):
@@ -114,7 +116,7 @@ class FactNode(LeafNode):
         res += "\n\t - " + str(self.weight) + "\n\t - " + str(self.positive) # TODO
         return res
 
-    def evaluate(self, tensor_sources: Tensor, semantics: Semantics):
+    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates:torch.nn.ModuleDict):
         """
         The evaluation of a weighted fact leaf node is: 
             - the weight of this node if this fact is positive; 
@@ -132,7 +134,7 @@ class NeuralNode(LeafNode):
     '''
     def __init__(self, model: Module, index: int, query, name:str="") -> None:
         super().__init__(name)
-        self.model = model
+        self.model = str(model)
         self.index = index  
         self.query = query
 
@@ -141,13 +143,22 @@ class NeuralNode(LeafNode):
         res += "\n\t - " + str(self.model) + "\n\t - " + str(self.index) + "\n\t - " + str(self.query)
         return res
 
-    def evaluate(self, tensor_sources: Tensor, semantics: Semantics):
+    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates:torch.nn.ModuleDict):
         """
         The evaluation of a neural fact leaf node is the output of the neural network of this node
         for the given input.
         """
-        print("RESULT EVALUATE NN:", self.model(tensor_sources["images"][:,self.index])[:, self.query])
-        return self.model(tensor_sources["images"][:,self.index])[:, self.query]
+        print(">>>>>>>>>> NN")
+        print(">>>>>>>>>>>> neural_predicates:", neural_predicates)
+        print(">>>>>>>>>>>> model:", self.model)
+        #STEP 1 get network
+        network = neural_predicates[self.model]
+
+        #STEP 2 get image:
+        image =tensor_sources["images"][:,self.index]
+
+        print(">>>>>>>>>>>> RESULT EVALUATE NN:", self.model(tensor_sources["images"][:,self.index])[:, self.query])
+        return network(tensor_sources["images"][:,self.index])[:, self.query]
     
     
 #  ,neural_predicates:torch.nn.ModuleDict):

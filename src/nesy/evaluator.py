@@ -7,8 +7,15 @@ class Evaluator():
         self.label_semantics = label_semantics
 
     def evaluate(self, tensor_sources, and_or_trees, queries):
-        # TODO: Implement this  
-        print("EVALUATE:",  [tree.evaluate(tensor_sources,self.label_semantics) for tree in and_or_trees])
+        print(">>>>>> EVALUATE")
+        print(">>>>>>>> TREES")
+        for tree_i in range(len(and_or_trees)):
+                print('>>>>>>>> Query: ', queries[tree_i])
+                print('>>>>>>>> TREE: ', and_or_trees[tree_i])
+                print(">>>>>>>> EVALUATION RES: ", and_or_trees[tree_i].evaluate(tensor_sources,self.label_semantics,self.neural_predicates))
+
+
+        print(">>>>>>>> EVALUATE:",  [tree.evaluate(tensor_sources,self.label_semantics,self.neural_predicates) for tree in and_or_trees])
 
 
         # return [tree.evaluate(tensor_sources,self.label_semantics,self.neural_predicates) for tree in and_or_trees]

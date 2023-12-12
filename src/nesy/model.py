@@ -53,8 +53,17 @@ class NeSyModel(pl.LightningModule):
         # TODO: Note that you need to handle both the cases of single queries (List[Term]), like during training
         #  or of grouped queries (List[List[Term]]), like during testing.
         #  Check how the dataset provides such queries.
-        and_or_tree = self.logic_engine.reason(self.program, queries)
-        results = self.evaluator.evaluate(tensor_sources, and_or_tree, queries)
+
+        if isinstance(queries[0], Term):
+            and_or_tree = self.logic_engine.reason(self.program, queries)
+        
+        # >> STEP 2A: evaluate every tree given the images in tensor_sources
+            results = self.evaluator.evaluate(tensor_sources, and_or_tree, queries)
+
+        #In case of validation step, the querys will be the same expcept for different images
+        else:
+            and_or_tree = self.logic_engine.reason(self.program, queries[0])
+            results = self.evaluator.evaluate(tensor_sources, and_or_tree, queries[0])
         return results
 
     def training_step(self, I, batch_idx):
