@@ -6,20 +6,25 @@ class Evaluator():
         self.neural_predicates = neural_predicates
         self.label_semantics = label_semantics
 
-    def evaluate(self, tensor_sources, and_or_trees, queries):
-        print(">>>>>> EVALUATE")
-        print(">>>>>>>> TREES")
-        for tree_i in range(len(and_or_trees)):
-                print('>>>>>>>> Query: ', queries[tree_i])
-                print('>>>>>>>> TREE: ', and_or_trees[tree_i])
-                print(">>>>>>>> EVALUATION RES: ", and_or_trees[tree_i].evaluate(tensor_sources,self.label_semantics,self.neural_predicates))
+    def evaluate(self, tensor_sources, and_or_trees, queries,image_seq_nb=-1):
+    
 
+        #CASE 1: training: The used image-sequence depends on the used query (so the index of the tree)
+        if image_seq_nb  < 0:
+             result = [and_or_trees[tree_i].evaluate(tensor_sources,self.label_semantics,self.neural_predicates,tree_i) for tree_i in range(len(and_or_trees))]
 
-        print(">>>>>>>> EVALUATE:",  [tree.evaluate(tensor_sources,self.label_semantics,self.neural_predicates) for tree in and_or_trees])
+        #CASE 2: validation: The used image-sequence is given by image_seq_nb 
+        # (since with validation the queries are all the same but the evaluated image_sequence varies)
+        else: 
+             result = [tree.evaluate(tensor_sources,self.label_semantics,self.neural_predicates,image_seq_nb) for tree in and_or_trees]
 
+        # for tree_index in range(len(and_or_trees)):
+        #         print('>>>>>>>> Query: ', queries[tree_index])
+        #         print('>>>>>>>> TREE: ', and_or_trees[tree_index])
+        #         print(">>>>>>>> EVALUATION RES: ", result[tree_index])
+            
 
-        # return [tree.evaluate(tensor_sources,self.label_semantics,self.neural_predicates) for tree in and_or_trees]
-        return [tree.evaluate(tensor_sources,self.label_semantics) for tree in and_or_trees]
+        return result
 
         # Our dummy And-Or-Tree (addition(img0, img1,0) is represented by digit(img0,0) AND digit(img1,0)
         # The evaluation is:
