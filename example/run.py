@@ -28,5 +28,5 @@ model = NeSyModel(program=task_train.program,
 
 trainer = pl.Trainer(max_epochs=1,logger=logger)
 trainer.fit(model=model,
-            train_dataloaders=task_train.dataloader(batch_size=2),
-            val_dataloaders=task_test.dataloader(batch_size=2))
+            train_dataloaders=task_train.dataloader(batch_size=4),
+            val_dataloaders=task_test.dataloader(batch_size=4))

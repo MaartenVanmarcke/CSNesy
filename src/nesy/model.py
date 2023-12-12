@@ -65,14 +65,16 @@ class NeSyModel(pl.LightningModule):
             results = self.evaluator.evaluate(tensor_sources, and_or_tree, queries)
 
         # >> STEP 1B: in the case of testing, the queries are List[List[Term]]
+        # else:
+        #     results = []
+            
+        #     for group_queries in queries:
+        #          and_or_tree = self.logic_engine.reason(self.program, group_queries)
+        #  # >> STEP 2B: evaluate  every tree given the images in tensor_sources
+        #          results.append(self.evaluator.evaluate(tensor_sources, and_or_tree, group_queries))
         else:
-            results = []
-            for group_queries in queries:
-                 and_or_tree = self.logic_engine.reason(self.program, group_queries)
-         # >> STEP 2B: evaluate  every tree given the images in tensor_sources
-                 results.append(self.evaluator.evaluate(tensor_sources, and_or_tree, group_queries))
-        
-        return results
+            and_or_tree = self.logic_engine.reason(self.program, queries[0])
+            return self.evaluator.evaluate(tensor_sources, and_or_tree,  queries[0])
 
     def training_step(self, I, batch_idx):
 
@@ -102,6 +104,8 @@ class NeSyModel(pl.LightningModule):
         #STEP 1: calculate the outcome of the model
         y_preds = self.forward(tensor_sources, queries)
 
+        print("Y PREDS: ", y_preds
+              )
         #STEP 2: reorder the y_preds: select for group of queries the prediction with the highest probability. Do this for every image
         pred_per_image_per_group = []
         nb_group_queries=len(queries)

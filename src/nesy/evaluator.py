@@ -18,8 +18,14 @@ class Evaluator():
         #     print(">>>> ", tree.evaluate(tensor_sources,self.label_semantics,self.neural_predicates))
         
         # print(">> trees toghether: ", [tree.evaluate(tensor_sources,self.label_semantics,self.neural_predicates) for tree in and_or_trees] )
+        eval_result=[tree.evaluate(tensor_sources,self.label_semantics,self.neural_predicates) for tree in and_or_trees]
+        end_result = []
+        print(eval_result)
+        print(queries)
+        for i in range(len(queries)):
+            end_result.append(eval_result[i][i])
 
-        return [tree.evaluate(tensor_sources,self.label_semantics,self.neural_predicates) for tree in and_or_trees]   #TODO also give  self.neural_predicates
+        return end_result   #TODO also give  self.neural_predicates
 
 
         # Our dummy And-Or-Tree (addition(img0, img1,0) is represented by digit(img0,0) AND digit(img1,0)
