@@ -67,9 +67,13 @@ class NeSyModel(pl.LightningModule):
 
     def validation_step(self, I, batch_idx):
         tensor_sources, queries, y_true = I
+        print("VALIDATION")
+        print(">>QUERIES: ", queries)
+        print(">>Y_TRUE: ", y_true)
         y_preds = self.forward(tensor_sources, queries)
+        print("<<Y_PREDS:", y_preds)
         accuracy = accuracy_score(y_true, y_preds.argmax(dim=-1))
-        self.log("test_acc", accuracy, on_step=True, on_epoch=True, prog_bar=True)
+        self.log("<<test_acc", accuracy, on_step=True, on_epoch=True, prog_bar=True)
         return accuracy
 
     def configure_optimizers(self):

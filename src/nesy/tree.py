@@ -146,7 +146,24 @@ class NeuralNode(LeafNode):
         The evaluation of a neural fact leaf node is the output of the neural network of this node
         for the given input.
         """
+        print("RESULT EVALUATE NN:", self.model(tensor_sources["images"][:,self.index])[:, self.query])
         return self.model(tensor_sources["images"][:,self.index])[:, self.query]
-        ## TODO: how to check if it is between 0 and 1? -> always the case since a softmax is the last layer of the nn
+    
+    
+#  ,neural_predicates:torch.nn.ModuleDict):
+
+# network = neural_predicates[self.model]
+#         # print("shape tensors: ", tensor_sources["images"].size())   #torch.Size([2, 2, 1, 28, 28])      torch.Size([1, 2, 1, 28, 28]
+#         #STEP 2: select the image from the tensor_sources
+#         image =tensor_sources["images"][:,self.index]
+
+# #STEP 3: get the predictions of the NN: this is the probability that the image belongs to every class 
+#         pred_of_network = network.forward(image)
+#         # print("total outcome:", pred_of_network)
+#         # print("outcome of leaf NN: ", pred_of_network)
+#         # print(pred_of_network[:, self.query])
+#         #STEP 4: return the relevant prediction 
+#         return pred_of_network[:, self.query]   
+#         ## TODO: how to check if it is between 0 and 1? -> always the case since a softmax is the last layer of the nn
 
 
