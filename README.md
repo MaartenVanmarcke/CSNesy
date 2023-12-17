@@ -13,3 +13,4 @@ Volgende week: dinsdag : structuur bekijken (5/12)
 22/12 : experimenteren & report
 
 
+$ source /Users/eli/Documents/unif/master_2/capita_selecta/CSNesy/.venv/bin/activate
