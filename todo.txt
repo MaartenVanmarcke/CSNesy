@@ -1,0 +1,22 @@
+TODO:
+
+- merge: all relevant things together
+- see if performance is correct (loss that increases again)
+- experiments: 
+        - Q1 scalability of logic engine when n_classes is increased?
+        - Q2 How does the accuracy evolve over during training?
+        - Q3 Effect of semantics? Plot their learning curves
+        - Q4 Scalability of system when n_digits is increased?
+
+- 2 extra experiments + optimization
+    bv
+        - caching? Impact on performance?
+        - robustness to input -> add noise
+        - improved forward chaining algorithm
+
+- new application proposal
+
+- write report
+
+
+
