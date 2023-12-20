@@ -39,7 +39,8 @@ class NeSyModel(pl.LightningModule):
                  neural_predicates: torch.nn.ModuleDict,
                  logic_engine: LogicEngine,
                  label_semantics: Semantics,
-                 learning_rate = 0.001, *args, **kwargs):
+                 learning_rate = 0.001,
+                  n_classes=2, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.neural_predicates = neural_predicates
         self.logic_engine = logic_engine
@@ -48,6 +49,9 @@ class NeSyModel(pl.LightningModule):
         self.learning_rate = learning_rate
         self.bce = torch.nn.BCELoss()
         self.evaluator = Evaluator(neural_predicates=neural_predicates, label_semantics=label_semantics)
+
+        self.n_classes = n_classes
+        self.prev_query =None
 
     def forward(self, tensor_sources: Dict[str, torch.Tensor],  queries: List[Term] | List[List[Term]]):
         # TODO: Note that you need to handle both the cases of single queries (List[Term]), like during training
@@ -78,8 +82,24 @@ class NeSyModel(pl.LightningModule):
         y_preds = self.forward(tensor_sources, queries) #[tensor(0.1698, grad_fn=<MulBackward0>), tensor(0.3411, grad_fn=<MulBackward0>)] -> tensor([0.4951, 0.3704], grad_fn=<StackBackward0>)
         y_preds_correct_size = torch.stack(y_preds) 
  
+
         loss = self.bce(y_preds_correct_size, y_true.squeeze())
         self.log("train_loss", loss, on_epoch=True, prog_bar=True)
+
+        #also save the training accuracy
+            # assign 1 if resulted value (seen as probability?) is larger than  1/nb_classes TODO is this correct
+        correct_predicted_label = torch.where(y_preds_correct_size.detach()>1/self.n_classes,1,0)
+        # print(y_preds_correct_size)
+        # print(y_true.squeeze())
+        # print("label", correct_predicted_label)
+        accuracy = accuracy_score(y_true.squeeze(), correct_predicted_label)
+        if accuracy < 1:
+            print("Low accuracy: ", accuracy)
+            print("prev query: ", self.prev_query)
+            print("current query: ", queries)
+        
+        self.log("train_accuracy:", accuracy,on_epoch=True, prog_bar=True)
+        self.prev_query=queries
         return loss
 
 
@@ -87,10 +107,11 @@ class NeSyModel(pl.LightningModule):
         tensor_sources, queries, y_true = I
        
         y_preds_proba = self.forward(tensor_sources, queries)
-        for inner in y_preds_proba:
-            print(torch.stack(inner))
-            print(torch.argmax(torch.stack(inner)))
+        # for inner in y_preds_proba:
+        #     print(torch.stack(inner))
+        #     print(torch.argmax(torch.stack(inner)))
         # calculate the predicted classes by taking the argmax of the predictions
+        # print(y_preds_proba)
         y_preds = [torch.argmax(torch.stack(inner)) for inner in y_preds_proba]
 
         accuracy = accuracy_score(y_true, y_preds)
