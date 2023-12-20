@@ -1,5 +1,6 @@
 TODO:
 
+- able to plot accuracy during training (needed for Q2)
 - merge: all relevant things together
 - see if performance is correct (loss that increases again)
 - experiments: 
