@@ -5,7 +5,7 @@ from collections import namedtuple
 from itertools import product
 from nesy.unifier import Unifier
 from nesy.substituer import Substituer
-from nesy.tree import FactNode, NeuralNode, ANDNode, ORNode, LeafNode
+from nesy.tree import FactNode, NeuralNode, ANDNode, ORNode, LeafNode, AndOrTree
 
 class LogicEngine(ABC):
 
@@ -43,14 +43,20 @@ class ForwardChaining(LogicEngine):
 
         return and_or_tree"""
     
+    def _remove_duplicates(self, lst):
+        res = []
+        for x in lst:
+            if x not in res:
+                res.append(x)
+        return res
+    
     def reason(self, program: tuple[Clause], queries: list[Term]):
         """
         Return a list of and-or-trees for each query in the given queries list.
         """
-        and_or_tree = []
-        for query in queries:
-            and_or_tree.append(self.fol_fc_ask_toAndOrTree(program, query))
-        return and_or_tree
+        queries = self._remove_duplicates(queries)
+        queries.sort()
+        return self.fol_fc_ask_toAndOrTree(program, queries)
     
     def _fol_fc_ask(self, program: tuple[Clause], query: Term):
         """
@@ -114,7 +120,7 @@ class ForwardChaining(LogicEngine):
         # Return false
         return False
     
-    def fol_fc_ask_toAndOrTree(self, program: tuple[Clause], query: Term):
+    def fol_fc_ask_toAndOrTree(self, program: tuple[Clause], queries: list[Term]):
         """
         This method construct an and-or-tree for the given query.
         The algorithm is based on the forward chaining algorithm as implemented in _fol_fc_ask().
@@ -203,13 +209,15 @@ class ForwardChaining(LogicEngine):
             # Remark: I add it to the atomicSentences, s.t. I do not have to loop over them as rules.
             last = new
             atomicSentences.update(new)
-        try:
-            # Return the and-or-tree of the given query.
-            return atomicSentences[str(query)][1]
-        except (Exception):
-            # If there is no valid derivation,
-            # the and-or-tree is just a Fact Node with weight 0.
-            return FactNode(0, name = str(query))
+
+        res = []
+        for query in queries:
+            if str(query) in atomicSentences.keys():
+                res.append( atomicSentences[str(query)][1] )
+            else:
+                res.append( FactNode(0, name = str(query)) )
+                
+        return AndOrTree(res, queries)
     
     def _standardize_variables(self,rule: Clause|Term|Variable, subst: dict[str, Variable] = {}):
         """

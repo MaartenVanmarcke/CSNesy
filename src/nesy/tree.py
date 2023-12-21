@@ -4,6 +4,7 @@ import torch
 from nesy.semantics import Semantics
 from torch import Tensor
 from torch.nn import Module
+from nesy.term import Term
 
 '''
 Node() abstract ; self.evaluate(dataTensor, semantics)
@@ -185,3 +186,24 @@ class NeuralNode(LeafNode):
         ## TODO: how to check if it is between 0 and 1? -> always the case since a softmax is the last layer of the nn
 
 
+class AndOrTree():
+    def __init__(self, queries: list[AndOrTreeNode], terms: list[Term]) -> None:
+        if len(queries) != len(terms):
+            raise ValueError("Invalid arguments.")
+        self.queries = queries
+        self.terms = terms
+
+    def evaluate(self, tensor_sources: Tensor, semantics: Semantics, neural_predicates:torch.nn.ModuleDict):
+        """
+        Evaluates the and-or-tree for each query.
+        """
+        res = torch.zeros((tensor_sources["images"].size()[0], len(self.queries)))
+        for i in range(len(self.queries)):
+            res[:,i] = self.queries[i].evaluate(tensor_sources, semantics, neural_predicates)
+        return res
+    
+    def findQuery(self, query):
+        return self.terms.index(query)
+    
+    def getIndexOfQuery(self):
+        return self.findQuery

@@ -6,7 +6,7 @@ class Evaluator():
         self.neural_predicates = neural_predicates
         self.label_semantics = label_semantics
 
-    def evaluate(self, tensor_sources, and_or_trees, queries):   #queries actually not needed
+    def evaluate(self, tensor_sources, and_or_tree, queries):   #queries actually not needed
         # print("NB OF TREES:", (len(and_or_trees)))
         # print("NB OF IMAGES:",  tensor_sources["images"].size())
         # print("queries")
@@ -18,7 +18,8 @@ class Evaluator():
         #     print(">>>> ", tree.evaluate(tensor_sources,self.label_semantics,self.neural_predicates))
         
         # print(">> trees toghether: ", [tree.evaluate(tensor_sources,self.label_semantics,self.neural_predicates) for tree in and_or_trees] )
-        eval_result=[tree.evaluate(tensor_sources,self.label_semantics,self.neural_predicates) for tree in and_or_trees]
+        eval_result = and_or_tree.evaluate(tensor_sources,self.label_semantics,self.neural_predicates)
+        return eval_result, and_or_tree.getIndexOfQuery()
         end_result = []
         print(eval_result)
         print(queries)

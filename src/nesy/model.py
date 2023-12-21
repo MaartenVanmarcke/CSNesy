@@ -9,6 +9,7 @@ from nesy.logic import LogicEngine
 from torch import nn
 from sklearn.metrics import accuracy_score
 from nesy.evaluator import Evaluator
+from itertools import chain
 
 class MNISTEncoder(nn.Module):
     def __init__(self, n):
@@ -60,9 +61,13 @@ class NeSyModel(pl.LightningModule):
         # >> STEP 1A: in the case of training, the queries are List[Term]
         if isinstance(queries[0], Term):
             and_or_tree = self.logic_engine.reason(self.program, queries)
+            results, getIndexOfQuery = self.evaluator.evaluate(tensor_sources, and_or_tree, queries)
         
         # >> STEP 2A: evaluate every tree given the images in tensor_sources
-            results = self.evaluator.evaluate(tensor_sources, and_or_tree, queries)
+            res = []
+            for i in range(len(queries)):
+                res.append(results[i][getIndexOfQuery(queries[i])])
+            return res
 
         # >> STEP 1B: in the case of testing, the queries are List[List[Term]]
         # else:
@@ -73,9 +78,13 @@ class NeSyModel(pl.LightningModule):
         #  # >> STEP 2B: evaluate  every tree given the images in tensor_sources
         #          results.append(self.evaluator.evaluate(tensor_sources, and_or_tree, group_queries))
         else:
-            and_or_tree = self.logic_engine.reason(self.program, queries[0])
-            return self.evaluator.evaluate(tensor_sources, and_or_tree,  queries[0])
-
+            and_or_tree = self.logic_engine.reason(self.program, list( chain.from_iterable(queries)))
+            results, getIndexOfQuery = self.evaluator.evaluate(tensor_sources, and_or_tree, queries)
+            res = torch.zeros_like(results)
+            for i in range(results.size()[1]):
+                res[:,i] = results[:, getIndexOfQuery(queries[0][i])]
+            return res
+        
     def training_step(self, I, batch_idx):
 
         tensor_sources, queries, y_true = I         #y true is always 1 in the case of training -> the training queries are true
@@ -85,8 +94,8 @@ class NeSyModel(pl.LightningModule):
         y_preds = self.forward(tensor_sources, queries) 
 
         # STEP 2: put the y_preds and y_true in the correct format
-        correct_size_y_preds =  torch.stack(y_preds)
-        correct_size_y_true =   y_true.repeat(1, nb_images_per_batch)
+        correct_size_y_preds =  torch.vstack(y_preds)
+        correct_size_y_true =   y_true
         # STEP 3: calculate the binary cross entropy loss, this is the mean of the losses of the batch 
         loss = self.bce(correct_size_y_preds,correct_size_y_true)     
         self.log("train_loss", loss, on_epoch=True, prog_bar=True) 
@@ -103,11 +112,8 @@ class NeSyModel(pl.LightningModule):
         nb_images_per_batch = next(iter(tensor_sources.values())).size()[0]
         #STEP 1: calculate the outcome of the model
         y_preds = self.forward(tensor_sources, queries)
-
-        print("Y PREDS: ", y_preds
-              )
         #STEP 2: reorder the y_preds: select for group of queries the prediction with the highest probability. Do this for every image
-        pred_per_image_per_group = []
+        """pred_per_image_per_group = []
         nb_group_queries=len(queries)
         for i in range(nb_group_queries):
             preds_of_group_query = y_preds[i]
@@ -116,12 +122,12 @@ class NeSyModel(pl.LightningModule):
                 preds_of_specific_image = [tensor[index_image] for tensor in preds_of_group_query]
                 pred_per_image.append(np.argmax(preds_of_specific_image))
             pred_per_image_per_group.append(pred_per_image)
-
-        correct_size_y_true =  [( y_true[i].repeat(nb_images_per_batch)).tolist() for i in range(len(y_true))]
+        correct_size_y_true =  [( y_true[i].repeat(nb_images_per_batch)).tolist() for i in range(len(y_true))]"""
         # print("____")
         # print("y pred:",np.array(pred_per_image_per_group).flatten().tolist())
         # print("y true:",np.array(pred_per_image_per_group).flatten().tolist())
-        accuracy = accuracy_score(np.array(pred_per_image_per_group).flatten().tolist(), np.array(correct_size_y_true).flatten().tolist())  #TODO fix what is given to calculate the y_preds
+        #accuracy = accuracy_score(np.array(pred_per_image_per_group).flatten().tolist(), np.array(correct_size_y_true).flatten().tolist())  #TODO fix what is given to calculate the y_preds
+        accuracy = accuracy_score(torch.argmax(y_preds, dim = 1), y_true)  #TODO fix what is given to calculate the y_preds
         # accuracy = accuracy_score(y_true, y_preds.argmax(dim=-1)) 
         self.log("test_acc", accuracy, on_step=True, on_epoch=True, prog_bar=True)
         return accuracy

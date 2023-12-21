@@ -9,9 +9,13 @@ class Term(namedtuple('Term', ['functor', 'arguments'])):
         return str(self.functor) + "(" + ",".join([str(a) for a in self.arguments]) + ")"
     
     def __eq__(self, __value: object) -> bool:
-        return (isinstance(__value, Term)
-                and self.functor == __value.functor
-                and Counter(self.arguments) == Counter(__value.arguments))
+        if (isinstance(__value, Term) and self.functor == __value.functor and len(self.arguments) == len(__value.arguments)):
+            for i in range(len(self.arguments)):
+                if self.arguments[i] != __value.arguments[i]:
+                    return False
+            return True
+        else:
+            return False
     
     def __contains__(self, __key: object) -> bool:
         if isinstance(__key, Variable):
