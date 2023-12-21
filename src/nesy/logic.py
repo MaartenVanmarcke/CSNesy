@@ -44,6 +44,7 @@ class ForwardChaining(LogicEngine):
         return and_or_tree"""
     
     def _remove_duplicates(self, lst):
+        """ Remove duplicates in a given list. """
         res = []
         for x in lst:
             if x not in res:
@@ -52,7 +53,7 @@ class ForwardChaining(LogicEngine):
     
     def reason(self, program: tuple[Clause], queries: list[Term]):
         """
-        Return a list of and-or-trees for each query in the given queries list.
+        Return a list of and-or-trees for each different query in the given queries list.
         """
         queries = self._remove_duplicates(queries)
         queries.sort()
@@ -210,6 +211,9 @@ class ForwardChaining(LogicEngine):
             last = new
             atomicSentences.update(new)
 
+        # Return the constructed tree for each query in queries.
+        # If not tree has been constructed for a query, it means it has no derivation and thus is always false.
+            # So that is equivalent to a fact node of weight 0.
         res = []
         for query in queries:
             if str(query) in atomicSentences.keys():

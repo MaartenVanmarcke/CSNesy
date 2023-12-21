@@ -187,6 +187,12 @@ class NeuralNode(LeafNode):
 
 
 class AndOrTree():
+    ''' 
+    A class representing an AND OR Tree with multiple roots (one per query).
+    The attributes are:
+        - self.queries: the list of the root nodes.
+        - self.terms: the corresponding terms of those root nodes.
+    '''
     def __init__(self, queries: list[AndOrTreeNode], terms: list[Term]) -> None:
         if len(queries) != len(terms):
             raise ValueError("Invalid arguments.")
@@ -195,15 +201,18 @@ class AndOrTree():
 
     def evaluate(self, tensor_sources: Tensor, semantics: Semantics, neural_predicates:torch.nn.ModuleDict):
         """
-        Evaluates the and-or-tree for each query.
+        Evaluates the full and-or-tree for the given inputs.
         """
         res = torch.zeros((tensor_sources["images"].size()[0], len(self.queries)))
+
+        # Evaluate each query
         for i in range(len(self.queries)):
             res[:,i] = self.queries[i].evaluate(tensor_sources, semantics, neural_predicates)
+
         return res
     
-    def findQuery(self, query):
+    def findQuery(self, query: Term):
+        """
+        Returns the index of the given query in the self.terms list.
+        """
         return self.terms.index(query)
-    
-    def getIndexOfQuery(self):
-        return self.findQuery

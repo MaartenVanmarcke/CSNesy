@@ -1,4 +1,5 @@
 import torch
+from nesy.tree import Term
 
 class Evaluator():
 
@@ -19,26 +20,15 @@ class Evaluator():
         
         # print(">> trees toghether: ", [tree.evaluate(tensor_sources,self.label_semantics,self.neural_predicates) for tree in and_or_trees] )
         eval_result = and_or_tree.evaluate(tensor_sources,self.label_semantics,self.neural_predicates)
-        return eval_result, and_or_tree.getIndexOfQuery()
-        end_result = []
-        print(eval_result)
-        print(queries)
-        for i in range(len(queries)):
-            end_result.append(eval_result[i][i])
+        if isinstance(queries[0], Term):
+            res = []
+            for i in range(len(queries)):
+                # Only return the evaluation of the asked query, not of every possible query
+                res.append(eval_result[i][and_or_tree.findQuery(queries[i])])
+            return res
 
-        return end_result   #TODO also give  self.neural_predicates
-
-
-        # Our dummy And-Or-Tree (addition(img0, img1,0) is represented by digit(img0,0) AND digit(img1,0)
-        # The evaluation is:
-        # p(addition(img0, img1,0)) = p(digit(img0,0) AND digit(img1,0)) =
-        p_digit_0_0 = self.neural_predicates["digit"](tensor_sources["images"][:,0])[:,0]
-        p_digit_1_0 = self.neural_predicates["digit"](tensor_sources["images"][:,1])[:,0]
-        p_sum_0 =  p_digit_0_0 * p_digit_1_0
-
-        # Here we trivially return the same value (p_sum_0[0]) for each of the queries to make the code runnable
-        if isinstance(queries[0], list):
-            res = [torch.stack([p_sum_0[0] for q in query]) for query in queries]
         else:
-            res = [p_sum_0[0] for query in queries]
-        return torch.stack(res)
+            res = torch.zeros_like(eval_result)
+            for i in range(eval_result.size()[1]):
+                res[:,i] = eval_result[:, and_or_tree.findQuery(queries[0][i])]
+            return res

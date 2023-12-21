@@ -61,13 +61,9 @@ class NeSyModel(pl.LightningModule):
         # >> STEP 1A: in the case of training, the queries are List[Term]
         if isinstance(queries[0], Term):
             and_or_tree = self.logic_engine.reason(self.program, queries)
-            results, getIndexOfQuery = self.evaluator.evaluate(tensor_sources, and_or_tree, queries)
         
         # >> STEP 2A: evaluate every tree given the images in tensor_sources
-            res = []
-            for i in range(len(queries)):
-                res.append(results[i][getIndexOfQuery(queries[i])])
-            return res
+            return self.evaluator.evaluate(tensor_sources, and_or_tree, queries)
 
         # >> STEP 1B: in the case of testing, the queries are List[List[Term]]
         # else:
@@ -79,11 +75,7 @@ class NeSyModel(pl.LightningModule):
         #          results.append(self.evaluator.evaluate(tensor_sources, and_or_tree, group_queries))
         else:
             and_or_tree = self.logic_engine.reason(self.program, list( chain.from_iterable(queries)))
-            results, getIndexOfQuery = self.evaluator.evaluate(tensor_sources, and_or_tree, queries)
-            res = torch.zeros_like(results)
-            for i in range(results.size()[1]):
-                res[:,i] = results[:, getIndexOfQuery(queries[0][i])]
-            return res
+            return self.evaluator.evaluate(tensor_sources, and_or_tree, queries)
         
     def training_step(self, I, batch_idx):
 

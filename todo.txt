@@ -1,0 +1,38 @@
+TODO:
+
+- able to plot accuracy during training (needed for Q2)
+        * EValuation set TODO
+- see if performance is correct (loss that increases again)
+        * DONE
+
+- merge: all relevant things together
+        * Arguments (basic evaluator, merged tree evaluator, n)
+        * Merged trees moet kunnen samenwerken met de basic evaluator
+
+- experiments: volgend semester, maar wel eens uitproberen 
+        - Q1 scalability of logic engine when n_classes is increased?
+                * Maarten: al eens checken
+        - Q2 How does the accuracy evolve over during training?
+        - Q3 Effect of semantics? Plot their learning curves
+        - Q4 Scalability of system when n_digits is increased?
+                * n_digits: DONE
+
+- 2 extra experiments + optimization
+    bv
+        - caching? Impact on performance?
+                * Caching van de boom : per epoch
+                * Caching van de neurale netten : per iteratie
+        - improved forward chaining algorithm
+                * FC uitbreiden
+
+- new application proposal : Sem 2, maar al over nadenken
+
+
+- write report : Sem 2
+
+
+SEMESTER 1:
+ * Evaluation set -> Maarten
+ * All relevent things mergen (arguments, merged trees moet samenwerken met basic evaluator, etc.) -> Eli
+ * Caching -> Eli
+ * FC algorithm -> Maarten
