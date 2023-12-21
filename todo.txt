@@ -1,19 +1,29 @@
 TODO:
 
 - able to plot accuracy during training (needed for Q2)
-- see if performance is correct (loss that increases again) 
+        * EValuation set TODO
+- see if performance is correct (loss that increases again)
+        * DONE
 
 - merge: all relevant things together
+        * Arguments (basic evaluator, merged tree evaluator, n)
+
+- Is de evaluator juist?
+        * 
 
 - experiments: 
         - Q1 scalability of logic engine when n_classes is increased?
+                * Maarten: al eens checken
         - Q2 How does the accuracy evolve over during training?
         - Q3 Effect of semantics? Plot their learning curves
         - Q4 Scalability of system when n_digits is increased?
+                * n_digits: DONE
 
 - 2 extra experiments + optimization
     bv
         - caching? Impact on performance?
+                * Caching van de boom : per epoch
+                * Caching van de neurale netten : per iteratie
         - robustness to input -> add noise
         - improved forward chaining algorithm
 
