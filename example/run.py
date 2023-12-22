@@ -15,7 +15,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 logger = TensorBoardLogger(save_dir="logs/", name="model")  
 
-n_digits =3
+n_digits =2
 n_classes =2
 task_train = AdditionTask(n=n_digits,n_classes=n_classes)
 task_test = AdditionTask(n=n_digits,n_classes=n_classes, train=False)
