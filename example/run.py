@@ -16,8 +16,8 @@ from pytorch_lightning.loggers import TensorBoardLogger
 logger = TensorBoardLogger(save_dir="logs/", name="model")  
 
 
-task_train = AdditionTask(n_classes=2)
-task_test = AdditionTask(n_classes=2, train=False)
+task_train = AdditionTask(n_classes=3)
+task_test = AdditionTask(n_classes=3, train=False)
 
 neural_predicates = torch.nn.ModuleDict({"digit": MNISTEncoder(task_train.n_classes)})
 
@@ -30,5 +30,5 @@ model = NeSyModel(program=task_train.program,
 
 trainer = pl.Trainer(max_epochs=1,logger=logger,log_every_n_steps=1)
 trainer.fit(model=model,
-            train_dataloaders=task_train.dataloader(batch_size=16),
-            val_dataloaders=task_test.dataloader(batch_size=16))
+            train_dataloaders=task_train.dataloader(batch_size=2),
+            val_dataloaders=task_test.dataloader(batch_size=2))
