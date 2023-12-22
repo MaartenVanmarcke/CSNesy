@@ -62,13 +62,7 @@ class NeSyModel(pl.LightningModule):
             return self.evaluator.evaluate(tensor_sources, and_or_tree, queries)
 
         # >> STEP 1B: in the case of testing, the queries are List[List[Term]]
-        # else:
-        #     results = []
-            
-        #     for group_queries in queries:
-        #          and_or_tree = self.logic_engine.reason(self.program, group_queries)
-        #  # >> STEP 2B: evaluate  every tree given the images in tensor_sources
-        #          results.append(self.evaluator.evaluate(tensor_sources, and_or_tree, group_queries))
+       
         else:
             and_or_tree = self.logic_engine.reason(self.program, list( chain.from_iterable(queries))) 
                 #TODO question: what is the chaining for? Can we not just construct the tree only once?
@@ -78,7 +72,6 @@ class NeSyModel(pl.LightningModule):
     def training_step(self, I, batch_idx):
 
         tensor_sources, queries, y_true = I         #y true is always 1 in the case of training -> the training queries are true
-        nb_images_per_batch = next(iter(tensor_sources.values())).size()[0]
         # STEP 1: calculate the outputs of the model given the queries and the tensor_sources. The result is a list of lists. 
         # The length of the list is equal to the number of queries and the length of the "inner lists" is equal to the number of tensor_sources
         y_preds = self.forward(tensor_sources, queries) 
@@ -104,20 +97,6 @@ class NeSyModel(pl.LightningModule):
         #STEP 1: calculate the outcome of the model
         y_preds = self.forward(tensor_sources, queries)
         #STEP 2: reorder the y_preds: select for group of queries the prediction with the highest probability. Do this for every image
-        """pred_per_image_per_group = []
-        nb_group_queries=len(queries)
-        for i in range(nb_group_queries):
-            preds_of_group_query = y_preds[i]
-            pred_per_image= []
-            for index_image in range(nb_images_per_batch):
-                preds_of_specific_image = [tensor[index_image] for tensor in preds_of_group_query]
-                pred_per_image.append(np.argmax(preds_of_specific_image))
-            pred_per_image_per_group.append(pred_per_image)
-        correct_size_y_true =  [( y_true[i].repeat(nb_images_per_batch)).tolist() for i in range(len(y_true))]"""
-        # print("____")
-        # print("y pred:",np.array(pred_per_image_per_group).flatten().tolist())
-        # print("y true:",np.array(pred_per_image_per_group).flatten().tolist())
-        #accuracy = accuracy_score(np.array(pred_per_image_per_group).flatten().tolist(), np.array(correct_size_y_true).flatten().tolist())  #TODO fix what is given to calculate the y_preds
         accuracy = accuracy_score(torch.argmax(y_preds, dim = 1), y_true)  #TODO fix what is given to calculate the y_preds
         # accuracy = accuracy_score(y_true, y_preds.argmax(dim=-1)) 
         self.log("test_acc", accuracy, on_step=True, on_epoch=True, prog_bar=True)
