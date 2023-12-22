@@ -55,6 +55,8 @@ class NeSyModel(pl.LightningModule):
      
         #STEP 1: return and or tree
         # >> STEP 1A: in the case of training, the queries are List[Term]
+        print("FORWARD")
+        print(">> queries ", queries)
         if isinstance(queries[0], Term):
             and_or_tree = self.logic_engine.reason(self.program, queries)
         
@@ -70,58 +72,51 @@ class NeSyModel(pl.LightningModule):
         #  # >> STEP 2B: evaluate  every tree given the images in tensor_sources
         #          results.append(self.evaluator.evaluate(tensor_sources, and_or_tree, group_queries))
         else:
-            and_or_tree = self.logic_engine.reason(self.program, list( chain.from_iterable(queries))) 
-                #TODO question: what is the chaining for? Can we not just construct the tree only once?
+
+            # and_or_tree = self.logic_engine.reason(self.program, list( chain.from_iterable(queries))) 
+            #TODO question: what is the chaining for? Can we not just construct the tree only once?
                 # since the test-queries always are always the same list? (of the possible additions?)
-            return self.evaluator.evaluate(tensor_sources, and_or_tree, queries)
+            results = []
+            batch_size =  len(queries)
+            for batch_nb in range(batch_size):
+                and_or_tree = self.logic_engine.reason(self.program,queries[0]) 
+                results.append(self.evaluator.evaluate(tensor_sources=tensor_sources,and_or_tree=and_or_tree,queries=queries,image_seq_nb=batch_nb))
+
+            return results
         
-    def training_step(self, I, batch_idx):
 
-        tensor_sources, queries, y_true = I         #y true is always 1 in the case of training -> the training queries are true
-        nb_images_per_batch = next(iter(tensor_sources.values())).size()[0]
-        # STEP 1: calculate the outputs of the model given the queries and the tensor_sources. The result is a list of lists. 
-        # The length of the list is equal to the number of queries and the length of the "inner lists" is equal to the number of tensor_sources
-        y_preds = self.forward(tensor_sources, queries) 
-
-        # STEP 2: put the y_preds and y_true in the correct format
-        correct_size_y_preds =  torch.vstack(y_preds)
-        correct_size_y_true =   y_true
-        # STEP 3: calculate the binary cross entropy loss, this is the mean of the losses of the batch 
-        loss = self.bce(correct_size_y_preds,correct_size_y_true)     
-        self.log("train_loss", loss, on_epoch=True, prog_bar=True) 
-        # assert False
+    def training_step(self, I, batch_idx):    
+        tensor_sources, queries, y_true = I
+        y_preds = self.forward(tensor_sources, queries)
+        print("PREDICTION: ", y_preds)
+        print("TRUE:", y_true)
+        y_preds_correct_size = torch.stack(y_preds) 
+        print("CORRECTED", y_preds_correct_size)
+        print( y_true.squeeze())
+        loss = self.bce(y_preds_correct_size, y_true.squeeze())
+        self.log("train_loss", loss, on_epoch=True, prog_bar=True)
         return loss
 
 
-    def validation_step(self, I, batch_idx):
-        tensor_sources, queries, y_true = I    
-        # the true y (of y_trues) gives the index of the correct query (of queries)
-        #for example: for the queries = ([addition(tensor(images,0),tensor(images,1),0), addition(tensor(images,0),tensor(images,1),1), addition(tensor(images,0),tensor(images,1),2)], [addition(tensor(images,0),tensor(images,1),0), addition(tensor(images,0),tensor(images,1),1), addition(tensor(images,0),tensor(images,1),2)]) 
-        # with y_true = tensor([2, 1])
-        #this means that addition(tensor(images,0),tensor(images,1),2) and addition(tensor(images,0),tensor(images,1),1) are correct
 
-        nb_images_per_batch = next(iter(tensor_sources.values())).size()[0]
-        #STEP 1: calculate the outcome of the model
-        y_preds = self.forward(tensor_sources, queries)
-        #STEP 2: reorder the y_preds: select for group of queries the prediction with the highest probability. Do this for every image
-        """pred_per_image_per_group = []
-        nb_group_queries=len(queries)
-        for i in range(nb_group_queries):
-            preds_of_group_query = y_preds[i]
-            pred_per_image= []
-            for index_image in range(nb_images_per_batch):
-                preds_of_specific_image = [tensor[index_image] for tensor in preds_of_group_query]
-                pred_per_image.append(np.argmax(preds_of_specific_image))
-            pred_per_image_per_group.append(pred_per_image)
-        correct_size_y_true =  [( y_true[i].repeat(nb_images_per_batch)).tolist() for i in range(len(y_true))]"""
-        # print("____")
-        # print("y pred:",np.array(pred_per_image_per_group).flatten().tolist())
-        # print("y true:",np.array(pred_per_image_per_group).flatten().tolist())
-        #accuracy = accuracy_score(np.array(pred_per_image_per_group).flatten().tolist(), np.array(correct_size_y_true).flatten().tolist())  #TODO fix what is given to calculate the y_preds
-        accuracy = accuracy_score(torch.argmax(y_preds, dim = 1), y_true)  #TODO fix what is given to calculate the y_preds
-        # accuracy = accuracy_score(y_true, y_preds.argmax(dim=-1)) 
+
+    def validation_step(self, I, batch_idx):
+
+        tensor_sources, queries, y_true = I
+
+        y_preds_proba = self.forward(tensor_sources, queries)
+        # for inner in y_preds_proba:
+        #     print(torch.stack(inner))
+        #     print(torch.argmax(torch.stack(inner)))
+        # calculate the predicted classes by taking the argmax of the predictions
+        # print(y_preds_proba)
+        y_preds = [torch.argmax(torch.stack(inner)) for inner in y_preds_proba]
+
+        accuracy = accuracy_score(y_true, y_preds)
         self.log("test_acc", accuracy, on_step=True, on_epoch=True, prog_bar=True)
         return accuracy
+
+
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(self.parameters(), lr=self.learning_rate)

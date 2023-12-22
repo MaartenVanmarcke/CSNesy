@@ -29,7 +29,7 @@ class AndOrTreeNode(ABC):
         super().__init__()
 
     @abstractmethod
-    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates:torch.nn.ModuleDict,results_nn_cache:dict|None):
+    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates:torch.nn.ModuleDict,image_seq_nb:int,results_nn_cache:dict|None):
         """
         An abstract method that evaluates this node for an input (tensor_sources), for some given semantics and some neural predicates.
         """
@@ -47,7 +47,7 @@ class InternalNode(AndOrTreeNode):
         self.child2 = child2
 
     @abstractmethod
-    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates:torch.nn.ModuleDict):
+    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,image_seq_nb:int,neural_predicates:torch.nn.ModuleDict):
         pass
 
     def __repr__(self) -> str:
@@ -65,12 +65,12 @@ class ORNode(InternalNode):
     def __init__(self, child1: AndOrTreeNode, child2: AndOrTreeNode, name:str="") -> None:
         super().__init__(child1, child2, name)
 
-    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates:torch.nn.ModuleDict,results_nn_cache:dict|None):
+    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates:torch.nn.ModuleDict,image_seq_nb:int,results_nn_cache:dict|None):
         """
         The evaluation of an OR node consists of the evaluation of both child nodes and a disjunction of their results as specified by the given semantics.
         """
-        res1 = self.child1.evaluate(tensor_sources, semantics,neural_predicates,results_nn_cache)
-        res2 = self.child2.evaluate(tensor_sources, semantics,neural_predicates,results_nn_cache)
+        res1 = self.child1.evaluate(tensor_sources, semantics,neural_predicates,image_seq_nb,results_nn_cache)
+        res2 = self.child2.evaluate(tensor_sources, semantics,neural_predicates,image_seq_nb,results_nn_cache)
         # print("________")
         # print(self)
         # print(res1, "+", res2)
@@ -86,12 +86,12 @@ class ANDNode(InternalNode):
     def __init__(self, child1: AndOrTreeNode, child2: AndOrTreeNode, name:str="") -> None:
         super().__init__(child1, child2, name)
 
-    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates:torch.nn.ModuleDict,nn_results_cache:dict|None):
+    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates:torch.nn.ModuleDict,image_seq_nb:int,nn_results_cache:dict|None):
         """
         The evaluation of an AND node consists of the evaluation of both child nodes and a condjunction of their results as specified by the given semantics.
         """
-        res1 = self.child1.evaluate(tensor_sources, semantics,neural_predicates,nn_results_cache)
-        res2 = self.child2.evaluate(tensor_sources, semantics,neural_predicates,nn_results_cache)
+        res1 = self.child1.evaluate(tensor_sources, semantics,neural_predicates,image_seq_nb,nn_results_cache)
+        res2 = self.child2.evaluate(tensor_sources, semantics,neural_predicates,image_seq_nb,nn_results_cache)
         # print("________")
         # print(self)
         # print(res1, "*", res2)
@@ -106,7 +106,7 @@ class LeafNode(AndOrTreeNode):
     '''
 
     @abstractmethod
-    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates,nn_results_cache:dict|None):
+    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates,image_seq_nb:int,nn_results_cache:dict|None):
         pass
 
 class FactNode(LeafNode):
@@ -128,7 +128,7 @@ class FactNode(LeafNode):
         res += "\n\t - " + str(self.weight) + "\n\t - " + str(self.positive) # TODO
         return res
 
-    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates,nn_results_cache:dict|None):
+    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates,image_seq_nb:int,nn_results_cache:dict|None):
         """
         The evaluation of a weighted fact leaf node is: 
             - the weight of this node if this fact is positive; 
@@ -163,7 +163,7 @@ class NeuralNode(LeafNode):
         res += "\n\t - " + str(self.model) + "\n\t - " + str(self.index) + "\n\t - " + str(self.query)
         return res
 
-    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates,nn_results_cache:dict|None): #TODO I think the neural_predicates should be given as well _>access NN by using name of NN
+    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates,image_seq_nb:int,nn_results_cache:dict|None): #TODO I think the neural_predicates should be given as well _>access NN by using name of NN
         """
         The evaluation of a neural fact leaf node is the output of the neural network of this node
         for the given input.
@@ -180,7 +180,7 @@ class NeuralNode(LeafNode):
         network = neural_predicates[self.model]
 
         #STEP 3: select the image from the tensor_sources
-        image =tensor_sources["images"][:,self.index]
+        image =tensor_sources["images"][image_seq_nb,self.index]
 
         #STEP 4: get the predictions of the NN: this is the probability that the image belongs to every class 
         pred_of_network = network.forward(image)
@@ -188,9 +188,11 @@ class NeuralNode(LeafNode):
         #STEP 5: if nn_results_cache is used, store the obtained result of the nn
         if nn_results_cache is not None:
             nn_results_cache[self.index] = pred_of_network
+        # print("PRED OF NN", pred_of_network)
 
+        # print("RETURN FROM NN LEAF", pred_of_network[self.query]   )
         #STEP 6: return the relevant prediction 
-        return pred_of_network[:, self.query]   
+        return pred_of_network[self.query]   
         ## TODO: how to check if it is between 0 and 1? -> always the case since a softmax is the last layer of the nn
 
 
@@ -202,12 +204,15 @@ class AndOrTree():
         - self.terms: the corresponding terms of those root nodes.
     '''
     def __init__(self, queries: list[AndOrTreeNode], terms: list[Term]) -> None:
+        print("AND OR TREE")
+        print(">> queries",queries )
+        print(">> terms",terms )
         if len(queries) != len(terms):
             raise ValueError("Invalid arguments.")
         self.queries = queries
         self.terms = terms
 
-    def evaluate(self, tensor_sources: Tensor, semantics: Semantics, neural_predicates:torch.nn.ModuleDict,use_nn_caching=False):
+    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates:torch.nn.ModuleDict,image_seq_nb=-1,use_nn_caching=False):
         """
         Evaluates the full and-or-tree for the given inputs.
         """
@@ -217,10 +222,19 @@ class AndOrTree():
             nn_cache = dict()
         else:
             nn_cache = None
+        res = []
         # Evaluate each query
-        for i in range(len(self.queries)):
-            res[:,i] = self.queries[i].evaluate(tensor_sources, semantics, neural_predicates,nn_cache)
-
+        print("EVALUATING TREE")
+        print("<< queries", self.queries)
+        if image_seq_nb < 0:
+            for i in range(len(self.queries)):
+                print("<< ", i)
+                res.append(self.queries[i].evaluate(tensor_sources, semantics, neural_predicates,i,nn_cache))
+               
+        else:
+             for i in range(len(self.queries)):
+                res.append(self.queries[i].evaluate(tensor_sources, semantics, neural_predicates,image_seq_nb,nn_cache))
+            
         return res
     
     def findQuery(self, query: Term):
