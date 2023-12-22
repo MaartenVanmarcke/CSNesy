@@ -50,14 +50,9 @@ class NeSyModel(pl.LightningModule):
         self.bce = torch.nn.BCELoss()
         self.evaluator = Evaluator(neural_predicates=neural_predicates, label_semantics=label_semantics)
 
-    def forward(self, tensor_sources: Dict[str, torch.Tensor],  queries: List[Term] | List[List[Term]]):
-        # TODO: Note that you need to handle both the cases of single queries (List[Term]), like during training
-        #  or of grouped queries (List[List[Term]]), like during testing.
-        #  Check how the dataset provides such queries.
-        # print(queries)
-
-
-        #STEP 1: build a list of the and or tree of every query
+    def forward(self, tensor_sources: Dict[str, torch.Tensor],  queries: List[Term] | List[List[Term]],caching=False):
+     
+        #STEP 1: return and or tree
         # >> STEP 1A: in the case of training, the queries are List[Term]
         if isinstance(queries[0], Term):
             and_or_tree = self.logic_engine.reason(self.program, queries)
@@ -74,7 +69,9 @@ class NeSyModel(pl.LightningModule):
         #  # >> STEP 2B: evaluate  every tree given the images in tensor_sources
         #          results.append(self.evaluator.evaluate(tensor_sources, and_or_tree, group_queries))
         else:
-            and_or_tree = self.logic_engine.reason(self.program, list( chain.from_iterable(queries)))
+            and_or_tree = self.logic_engine.reason(self.program, list( chain.from_iterable(queries))) 
+                #TODO question: what is the chaining for? Can we not just construct the tree only once?
+                # since the test-queries always are always the same list? (of the possible additions?)
             return self.evaluator.evaluate(tensor_sources, and_or_tree, queries)
         
     def training_step(self, I, batch_idx):
@@ -91,6 +88,7 @@ class NeSyModel(pl.LightningModule):
         # STEP 3: calculate the binary cross entropy loss, this is the mean of the losses of the batch 
         loss = self.bce(correct_size_y_preds,correct_size_y_true)     
         self.log("train_loss", loss, on_epoch=True, prog_bar=True) 
+        # assert False
         return loss
 
 

@@ -22,11 +22,11 @@ task_test = AdditionTask(n_classes=2, train=False)
 neural_predicates = torch.nn.ModuleDict({"digit": MNISTEncoder(task_train.n_classes)})
 
 model = NeSyModel(program=task_train.program,
-                  logic_engine=ForwardChaining(),
+                  logic_engine=ForwardChaining(caching_used=True),
                   neural_predicates=neural_predicates,
                   label_semantics=SumProductSemiring())
 
-trainer = pl.Trainer(max_epochs=4,logger=logger)
+trainer = pl.Trainer(max_epochs=1,logger=logger,log_every_n_steps=1)
 trainer.fit(model=model,
-            train_dataloaders=task_train.dataloader(batch_size=4),
-            val_dataloaders=task_test.dataloader(batch_size=4))
+            train_dataloaders=task_train.dataloader(batch_size=16),
+            val_dataloaders=task_test.dataloader(batch_size=16))

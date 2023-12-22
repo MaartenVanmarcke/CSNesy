@@ -16,11 +16,15 @@ class LogicEngine(ABC):
 
 class ForwardChaining(LogicEngine):
 
-    def __init__(self) -> None:
+    def __init__(self,caching_used=False) -> None:
         self.unifier = Unifier()
         self.substituer = Substituer()
+        self.caching_used = caching_used
+        self.cache_of_trees = dict()
         super().__init__()
 
+    def flush_cache(self):
+        self.cache_of_trees=dict()
     """
     This was the original function:
     def reason(self, program: tuple[Clause], queries: list[Term]):
@@ -142,6 +146,23 @@ class ForwardChaining(LogicEngine):
         -------
             The and-or-tree of the query. If the query has no possible derivation, the result is a Fact Node with weight 0.
         """
+        # define the list of results
+        res = [None] * len(queries)
+        # check if already cached:
+
+        if self.caching_used:
+            for q in range(len(queries)):
+                cached_tree= self.cache_of_trees.get(str(queries[q]))
+                if cached_tree is not None:
+                    # print("Cache found!")
+                    res[q] = cached_tree
+                else:
+                    print("no cache")
+            #check if every query was cached -> result can already be returned!        
+            if None not in res:
+                return AndOrTree(res, queries)
+
+
         self.var_count = 0  # A counter, used to make unused Variables.
         KB = list(program)
         # Extract all atomic sentences in the KB and remove them from the KB
@@ -214,12 +235,17 @@ class ForwardChaining(LogicEngine):
         # Return the constructed tree for each query in queries.
         # If not tree has been constructed for a query, it means it has no derivation and thus is always false.
             # So that is equivalent to a fact node of weight 0.
-        res = []
-        for query in queries:
-            if str(query) in atomicSentences.keys():
-                res.append( atomicSentences[str(query)][1] )
-            else:
-                res.append( FactNode(0, name = str(query)) )
+
+        for query_index in range(len(queries)):
+            query = queries[query_index]
+            if res[query_index] is None:
+                if str(query) in atomicSentences.keys():
+                    tree_query = atomicSentences[str(query)][1]
+                    res[query_index] = tree_query 
+                    # cache this tree for the future!
+                    self.cache_of_trees[str(query)]= tree_query
+                else:
+                    res[query_index] = FactNode(0, name = str(query)) 
                 
         return AndOrTree(res, queries)
     
