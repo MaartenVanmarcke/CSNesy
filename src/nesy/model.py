@@ -52,15 +52,15 @@ class NeSyModel(pl.LightningModule):
         self.evaluator = Evaluator(neural_predicates=neural_predicates, label_semantics=label_semantics,use_nn_caching=use_nn_caching)
 
     def forward(self, tensor_sources: Dict[str, torch.Tensor],  queries: List[Term] | List[List[Term]],caching=False):
-        print("in forward")
-        print(queries)
-        print(queries[0].__class__)
+        # print("in forward")
+        # print(queries)
+        # print(queries[0].__class__)
         #STEP 1: return and or tree
         # >> STEP 1A: in the case of training, the queries are List[Term]
         if isinstance(queries[0], Term):
-            print("build tree")
+            # print("build tree")
             and_or_tree = self.logic_engine.reason(self.program, queries)
-            print("done tree")
+            # print("done tree")
             print(and_or_tree)
         # >> STEP 2A: evaluate every tree given the images in tensor_sources
             return self.evaluator.evaluate(tensor_sources, and_or_tree, queries)

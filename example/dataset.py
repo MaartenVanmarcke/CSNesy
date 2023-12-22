@@ -99,14 +99,12 @@ class AdditionTask(Dataset):
 
             # query = parse_program("addition(tensor(images, 0), tensor(images,1), {}).".format(target))[0].term
 
-            query = []
             terms = "addition("
             for i in range(self.num_digits):
                 terms += "tensor(images, " +str(i) + "), "
 
             terms+= "{}).".format(target)
-            print("TERMS ", terms)
-            query.append(parse_program(terms)[0].term) 
+            query = parse_program(terms)[0].term
 
             tensor_sources = {"images": images}
 
