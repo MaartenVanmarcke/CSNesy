@@ -171,10 +171,10 @@ class NeuralNode(LeafNode):
         
         # STEP 1 if nn_results_cache is used, check if the neural network has not already been evaluated
         if nn_results_cache is not None:
-            cached = nn_results_cache.get(self.index)
+            cached = nn_results_cache.get(str(image_seq_nb) + ":" + str(self.index))
             # print("from cache: ", cached)
             if cached is not None:
-                return cached[:, self.query]
+                return cached[self.query]
             
         # STEP 2: get the neural network of the leaf
         network = neural_predicates[self.model]
@@ -187,7 +187,7 @@ class NeuralNode(LeafNode):
         
         #STEP 5: if nn_results_cache is used, store the obtained result of the nn
         if nn_results_cache is not None:
-            nn_results_cache[self.index] = pred_of_network
+            nn_results_cache[str(image_seq_nb) + ":" + str(self.index)] = pred_of_network
         # print("PRED OF NN", pred_of_network)
 
         # print("RETURN FROM NN LEAF", pred_of_network[self.query]   )
@@ -204,9 +204,7 @@ class AndOrTree():
         - self.terms: the corresponding terms of those root nodes.
     '''
     def __init__(self, queries: list[AndOrTreeNode], terms: list[Term]) -> None:
-        print("AND OR TREE")
-        print(">> queries",queries )
-        print(">> terms",terms )
+        
         if len(queries) != len(terms):
             raise ValueError("Invalid arguments.")
         self.queries = queries
@@ -218,21 +216,26 @@ class AndOrTree():
         """
         res = torch.zeros((tensor_sources["images"].size()[0], len(self.queries)))
 
-        if use_nn_caching:
-            nn_cache = dict()
-        else:
-            nn_cache = None
         res = []
+
         # Evaluate each query
-        print("EVALUATING TREE")
-        print("<< queries", self.queries)
+        # print("EVALUATING TREE")
+        # print("<< queries", self.queries)
         if image_seq_nb < 0:
             for i in range(len(self.queries)):
-                print("<< ", i)
+                if use_nn_caching:
+                    nn_cache = dict()   #TODO where to initialze this?
+                else:
+                    nn_cache = None
+                # print("<< ", i)
                 res.append(self.queries[i].evaluate(tensor_sources, semantics, neural_predicates,i,nn_cache))
                
         else:
              for i in range(len(self.queries)):
+                if use_nn_caching:
+                    nn_cache = dict()   #TODO where to initialze this?
+                else:
+                    nn_cache = None
                 res.append(self.queries[i].evaluate(tensor_sources, semantics, neural_predicates,image_seq_nb,nn_cache))
             
         return res

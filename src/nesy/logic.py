@@ -59,8 +59,7 @@ class ForwardChaining(LogicEngine):
         """
         Return a list of and-or-trees for each different query in the given queries list.
         """
-        queries = self._remove_duplicates(queries)
-        queries.sort()
+        
         return self.fol_fc_ask_toAndOrTree(program, queries)
     
     def _fol_fc_ask(self, program: tuple[Clause], query: Term):
