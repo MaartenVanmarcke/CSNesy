@@ -52,25 +52,36 @@ class NeSyModel(pl.LightningModule):
         self.evaluator = Evaluator(neural_predicates=neural_predicates, label_semantics=label_semantics,use_nn_caching=use_nn_caching)
 
     def forward(self, tensor_sources: Dict[str, torch.Tensor],  queries: List[Term] | List[List[Term]],caching=False):
-     
+        print("in forward")
+        print(queries)
+        print(queries[0].__class__)
         #STEP 1: return and or tree
         # >> STEP 1A: in the case of training, the queries are List[Term]
         if isinstance(queries[0], Term):
+            print("build tree")
             and_or_tree = self.logic_engine.reason(self.program, queries)
-        
+            print("done tree")
+            print(and_or_tree)
         # >> STEP 2A: evaluate every tree given the images in tensor_sources
             return self.evaluator.evaluate(tensor_sources, and_or_tree, queries)
 
         # >> STEP 1B: in the case of testing, the queries are List[List[Term]]
        
         else:
+            print("IN ELSE")
+            print(self.program)
+            print("_______")
+            print(list( chain.from_iterable(queries)))
             and_or_tree = self.logic_engine.reason(self.program, list( chain.from_iterable(queries))) 
+            for tree in and_or_tree.queries:
+                print(tree)
+            print()
                 #TODO question: what is the chaining for? Can we not just construct the tree only once?
                 # since the test-queries always are always the same list? (of the possible additions?)
             return self.evaluator.evaluate(tensor_sources, and_or_tree, queries)
         
     def training_step(self, I, batch_idx):
-
+        print("start training")
         tensor_sources, queries, y_true = I         #y true is always 1 in the case of training -> the training queries are true
         # STEP 1: calculate the outputs of the model given the queries and the tensor_sources. The result is a list of lists. 
         # The length of the list is equal to the number of queries and the length of the "inner lists" is equal to the number of tensor_sources
@@ -87,6 +98,7 @@ class NeSyModel(pl.LightningModule):
 
 
     def validation_step(self, I, batch_idx):
+        print("start validation")
         tensor_sources, queries, y_true = I    
         # the true y (of y_trues) gives the index of the correct query (of queries)
         #for example: for the queries = ([addition(tensor(images,0),tensor(images,1),0), addition(tensor(images,0),tensor(images,1),1), addition(tensor(images,0),tensor(images,1),2)], [addition(tensor(images,0),tensor(images,1),0), addition(tensor(images,0),tensor(images,1),1), addition(tensor(images,0),tensor(images,1),2)]) 
