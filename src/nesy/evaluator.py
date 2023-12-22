@@ -3,9 +3,10 @@ from nesy.tree import Term
 
 class Evaluator():
 
-    def __init__(self, label_semantics, neural_predicates):
+    def __init__(self, label_semantics, neural_predicates,use_nn_caching=False):
         self.neural_predicates = neural_predicates
         self.label_semantics = label_semantics
+        self.use_nn_caching =  use_nn_caching
 
     def evaluate(self, tensor_sources, and_or_tree, queries):   #queries actually not needed
         # print("NB OF TREES:", (len(and_or_trees)))
@@ -19,7 +20,7 @@ class Evaluator():
         #     print(">>>> ", tree.evaluate(tensor_sources,self.label_semantics,self.neural_predicates))
         
         # print(">> trees toghether: ", [tree.evaluate(tensor_sources,self.label_semantics,self.neural_predicates) for tree in and_or_trees] )
-        eval_result = and_or_tree.evaluate(tensor_sources,self.label_semantics,self.neural_predicates)
+        eval_result = and_or_tree.evaluate(tensor_sources,self.label_semantics,self.neural_predicates,self.use_nn_caching)
         if isinstance(queries[0], Term):
             res = []
             for i in range(len(queries)):

@@ -40,7 +40,8 @@ class NeSyModel(pl.LightningModule):
                  neural_predicates: torch.nn.ModuleDict,
                  logic_engine: LogicEngine,
                  label_semantics: Semantics,
-                 learning_rate = 0.001, *args, **kwargs):
+                 learning_rate = 0.001,
+                  use_nn_caching=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.neural_predicates = neural_predicates
         self.logic_engine = logic_engine
@@ -48,7 +49,7 @@ class NeSyModel(pl.LightningModule):
         self.program = tuple(program)
         self.learning_rate = learning_rate
         self.bce = torch.nn.BCELoss()
-        self.evaluator = Evaluator(neural_predicates=neural_predicates, label_semantics=label_semantics)
+        self.evaluator = Evaluator(neural_predicates=neural_predicates, label_semantics=label_semantics,use_nn_caching=use_nn_caching)
 
     def forward(self, tensor_sources: Dict[str, torch.Tensor],  queries: List[Term] | List[List[Term]],caching=False):
      
