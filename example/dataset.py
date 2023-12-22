@@ -97,7 +97,15 @@ class AdditionTask(Dataset):
             # In MNIST Addition, training queries for a single pair of images check for a given sum (i.e. the target)
             # Therefore, we have a List[Term], each element of the list correspond to a single pair of images
 
-            query = parse_program("addition(tensor(images, 0), tensor(images,1), {}).".format(target))[0].term
+            # query = parse_program("addition(tensor(images, 0), tensor(images,1), {}).".format(target))[0].term
+
+            terms = "addition("
+            for i in range(self.num_digits):
+                terms += "tensor(images, " +str(i) + "), "
+
+            terms+= "{}).".format(target)
+            query = parse_program(terms)[0].term
+
             tensor_sources = {"images": images}
 
             return tensor_sources, query, torch.tensor([1.0])
@@ -106,9 +114,18 @@ class AdditionTask(Dataset):
             # In this way, we can compute the most probable sum.
             # Therefore, we have a List[List[Term]], each element of the outer list correspond to a single pair of
             # images. Each element of the inner list correspond to a possible sum.
+            queries = []
+            for z in range(self.n_classes * 2 - 1):
 
-            queries = [parse_program("addition(tensor(images, 0), tensor(images,1), {}).".format(z))[0].term
-                       for z in range(self.n_classes * 2 - 1)]
+                terms = "addition("
+                for i in range(self.num_digits):
+                    terms += "tensor(images, " +str(i) + "), "
+                
+                terms+= "{}).".format(z)
+                queries.append(parse_program(terms)[0].term) 
+                  
+            # queries = [parse_program("addition(tensor(images, 0), tensor(images,1), {}).".format(z))[0].term
+            #            for z in range(self.n_classes * 2 - 1)]
             tensor_sources = {"images": images}
 
             return tensor_sources, queries, target
