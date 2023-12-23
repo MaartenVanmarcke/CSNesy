@@ -35,9 +35,5 @@ $ tensorboard --logdir logs/
 -> ga naar http://localhost:6006 voor training loss 
 
 
-addition(tensor(images,0),tensor(images,1),0), addition(tensor(images,0),tensor(images,1),1), addition(tensor(images,0),tensor(images,1),2)
+[add(0,0,0), add(0,1,1), add(1,0,1), add(1,1,2), digit(tensor(images,0),0), digit(tensor(images,0),1), digit(tensor(images,1),0), digit(tensor(images,1),1)]
 
-
-([addition(tensor(images,0),tensor(images,1),0), addition(tensor(images,0),tensor(images,1),1), addition(tensor(images,0),tensor(images,1),2)]
-, 
-[addition(tensor(images,0),tensor(images,1),0), addition(tensor(images,0),tensor(images,1),1), addition(tensor(images,0),tensor(images,1),2)])

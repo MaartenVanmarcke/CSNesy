@@ -97,7 +97,7 @@ class ForwardChaining(LogicEngine):
             new = []
             # For each rule in KB do
             for rule in KB: # Remark: I do not look at atomic sentences
-                
+                            
                 # (p1 ^ p2 ^ ... ^ pn => q) <- Standardize-Variables(rule)
                 updatedRule = self._standardize_variables(rule, {})
 
@@ -166,6 +166,7 @@ class ForwardChaining(LogicEngine):
         KB = list(program)
         # Extract all atomic sentences in the KB and remove them from the KB
         atomicSentences = self._extractAtomicSentences(KB)
+        # print("AS:", atomicSentences)
         ## New: now, atomicSentences and new are dictionaries. This is to easily construct the and-or-tree.
         # The keys of this dictionary are the string representations of the atomic sentences. 
         # The values of this dictionary are tuples with the first element equal to the atomic sentence 
@@ -174,6 +175,7 @@ class ForwardChaining(LogicEngine):
         ## New: keep track of the atomic sentences that were added in the previous iteration,
         # This will be necessary to check if a derivation is a new one or not.
         last = {}
+        # print("building logic")
 
         # Repeat until new is empty
         while len(new.keys())>0:
@@ -182,12 +184,17 @@ class ForwardChaining(LogicEngine):
             new = {}
             # For each rule in KB do
             for rule in KB: # Remark: I do not look at atomic sentences
-                
+                # print(">> in rule for")
+
                 # (p1 ^ p2 ^ ... ^ pn => q) <- Standardize-Variables(rule)
                 updatedRule = self._standardize_variables(rule, {})
-
+                # print(">> updated rule")
                 # For each theta such that Subst(theta, p1 ^ p2 ^ ... ^ pn) = Subst(theta, p1' ^ p2' ^ ... ^ pn') for some p1', p2', ..., pn' in KB
-                for ps in list(product(self._aux(atomicSentences), repeat=len(updatedRule.body))):
+                # print(self._aux(atomicSentences))
+                # print(">>")
+                # print(len(updatedRule.body))
+                for ps in list(product(self._aux(atomicSentences), repeat=len(updatedRule.body))):  #TODO: his self._aux(atomicSentences) leads to the infinite loop (it is very long)!
+                    # print(">>>>")
                     subst = self.unifier.unifyMultiple(updatedRule.body, list(ps)) # Remark: I take the most general theta.
 
                     if subst != None:
@@ -229,6 +236,7 @@ class ForwardChaining(LogicEngine):
             # add new to KB
             # Remark: I add it to the atomicSentences, s.t. I do not have to loop over them as rules.
             last = new
+            # print("update AS")
             atomicSentences.update(new)
 
         # Return the constructed tree for each query in queries.
