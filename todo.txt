@@ -7,6 +7,7 @@ TODO:
 
 - merge: all relevant things together
         * Arguments (basic evaluator, merged tree evaluator, n)
+                * TODO fix infinite loop white n_digits!!
 
 - Is de evaluator juist?
         * 
@@ -22,8 +23,8 @@ TODO:
 - 2 extra experiments + optimization
     bv
         - caching? Impact on performance?
-                * Caching van de boom : per epoch
-                * Caching van de neurale netten : per iteratie
+                * Caching van de boom : per epoch -> done
+                * Caching van de neurale netten : per iteratie -> done
         - robustness to input -> add noise
         - improved forward chaining algorithm
 
