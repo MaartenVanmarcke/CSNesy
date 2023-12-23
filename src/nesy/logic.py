@@ -188,7 +188,7 @@ class ForwardChaining(LogicEngine):
                 updatedRule = self._standardize_variables(rule, {})
 
                 # For each theta such that Subst(theta, p1 ^ p2 ^ ... ^ pn) = Subst(theta, p1' ^ p2' ^ ... ^ pn') for some p1', p2', ..., pn' in KB
-                for ps in list(product(self._aux(atomicSentences), repeat=len(updatedRule.body))):
+                for ps in list(product(self._aux(atomicSentences), repeat=len(updatedRule.body))): #TODO: his self._aux(atomicSentences) leads to the infinite loop (it is very long)!
                     subst = self.unifier.unifyMultiple(updatedRule.body, list(ps)) # Remark: I take the most general theta.
 
                     if subst != None:
