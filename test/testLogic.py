@@ -11,7 +11,7 @@ from nesy.term import Clause
 x = """b :- a, d.
 e :- b, c.
 0.8 :: a.
-nn(digit, tensor(images, 0), d) :: d."""
+0.9 :: d."""
 
 progr = parse_program(x)
 progr.append(Clause(parse_term("c"), []))
@@ -71,6 +71,13 @@ c(X) :- b(X)."""
 progr = parse_program(x)
 progr.append(Clause(parse_term("a(b)"), []))
 
+print(progr)
+
+fc = ForwardChaining()
+tree = (fc.reason(progr, [parse_term("c(b)")]))
+print(tree)
+
+
 
 x = """f(b) :- a(b), b(b).
 c(b) :- f(b), a(b).
@@ -85,7 +92,7 @@ progr.append(Clause(parse_term("b(b)"), []))
 print(progr)
 
 fc = ForwardChaining()
-tree = (fc.reason(progr, [parse_term("d(b)")]))
+tree = (fc.reason(progr, [parse_term("d(b)"), parse_term("f(b)")]))
 print(tree)
 
 
