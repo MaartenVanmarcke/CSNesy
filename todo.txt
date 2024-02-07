@@ -7,7 +7,7 @@ TODO:
 
 - merge: all relevant things together
         * Arguments (basic evaluator, merged tree evaluator, n)
-                * TODO fix infinite loop white n_digits!!
+                * TODO fix infinite loop with n_digits!!
 
 - Is de evaluator juist?
         * 
