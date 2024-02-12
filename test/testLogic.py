@@ -5,7 +5,7 @@ current = pathlib.Path().absolute()
 sys.path.insert(0,os.path.join(current, 'src'))
 
 from nesy.parser import parse_program, parse_clause, parse_term
-from nesy.logic import ForwardChaining
+from nesy.logic_optimized import ForwardChaining
 from nesy.term import Clause
 
 x = """b :- a, d.
@@ -51,7 +51,7 @@ assert str(progr) == "[addition(X,Y,Z) :- digit(X,N1),digit(Y,N2),add(N1,N2,Z), 
 fc = ForwardChaining()
 tree = (fc.reason(progr, [parse_term("addition(0,1,1)")]))
 #print(tree)
-assert (str(tree).split() == """- ORNode : addition(0,1,1)
+assert (str(tree).split() in ["""- ORNode : addition(0,1,1)
         |- ANDNode : addition(0,1,1)
         |       |- FactNode : digit(0,0)
         |       |        - 1
@@ -73,7 +73,30 @@ assert (str(tree).split() == """- ORNode : addition(0,1,1)
                         |        - True
                         |- FactNode : add(1,0,1)
                                  - 1
-                                 - True""".split())
+                                 - True""".split(), """- ORNode : addition(0,1,1)
+        |- ANDNode : addition(0,1,1)
+        |       |- FactNode : digit(0,1)
+        |       |        - 1
+        |       |        - True
+        |       |- ANDNode :
+        |               |- FactNode : digit(1,0)
+        |               |        - 1
+        |               |        - True
+        |               |- FactNode : add(1,0,1)
+        |                        - 1
+        |                        - True
+        |- ANDNode : addition(0,1,1)
+                |- FactNode : digit(0,0)
+                |        - 1
+                |        - True
+                |- ANDNode :
+                        |- FactNode : digit(1,1)
+                        |        - 1
+                        |        - True
+                        |- FactNode : add(0,1,1)
+                                 - 1
+                                 - True""".split()
+                                 ])
 
 
 

@@ -4,7 +4,7 @@ import os
 current = pathlib.Path().absolute()
 sys.path.insert(0,os.path.join(current, 'src'))
 #
-from nesy.unifier import Unifier
+from nesy.unifier_optimized import Unifier
 from nesy.substituer import Substituer
 from nesy.term import Term, Clause, Fact, Variable
 from nesy.parser import parse_term

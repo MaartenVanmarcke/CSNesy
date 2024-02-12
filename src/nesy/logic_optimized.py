@@ -3,8 +3,8 @@ from nesy.parser import parse_term, parse_program
 from abc import ABC, abstractmethod
 from collections import namedtuple
 from itertools import product
-from nesy.unifier import Unifier
-from nesy.substituer import Substituer
+from nesy.unifier_optimized import Unifier
+from nesy.substituer_optimized import Substituer
 from nesy.tree import FactNode, NeuralNode, ANDNode, ORNode, LeafNode, AndOrTree
 
 class LogicEngine(ABC):
@@ -59,67 +59,6 @@ class ForwardChaining(LogicEngine):
         queries.sort()
         return self.fol_fc_ask_toAndOrTree(program, queries)
     
-    def _fol_fc_ask(self, program: tuple[Clause], query: Term):
-        """
-        This method checks if the given query is logically entailed by the program.
-        The used lgorithm is the forward chaining algorithm as described in the book.
-        Basically, we start with all atomic sentences.
-        In each iteration, we loop over all clauses in the program, adding the head of the clauses for which all terms in the body are known.
-        If we have not found new atomic sentences after looping over all rules in the program,
-        we stop the algorithm.
-        If the query is found as an atomic sentence, we return True,
-        else we return False. 
-
-        Arguments
-        ---------
-            program: A list of clauses
-            query: The term to check
-            
-        Returns
-        -------
-            True if there exists a derivation for the query; False otherwise.
-        """
-
-        self.var_count = 0 # A counter, used to make unused Variables.
-        KB = list(program) 
-        # Extract all atomic sentences in the KB and remove them from the KB
-        atomicSentences = self._extractAtomicSentences_original(KB) 
-        new = [None]
-
-
-        # Repeat until new is empty
-        while len(new)>0:
-            
-            # new <- {}
-            new = []
-            # For each rule in KB do
-            for rule in KB: # Remark: I do not look at atomic sentences
-                
-                # (p1 ^ p2 ^ ... ^ pn => q) <- Standardize-Variables(rule)
-                updatedRule = self._standardize_variables(rule, {})
-
-                # For each theta such that Subst(theta, p1 ^ p2 ^ ... ^ pn) = Subst(theta, p1' ^ p2' ^ ... ^ pn') for some p1', p2', ..., pn' in KB
-                for ps in list(product(atomicSentences, repeat=len(updatedRule.body))):
-                    subst = self.unifier.unifyMultiple(updatedRule.body, list(ps)) # Remark: I take the most general theta.
-                    
-                    if subst != None:
-                        # q' <- Subst(theta, q)
-                        newAtom = self.substituer.substitution(subst, updatedRule.head)
-
-                        # If q' does not unify with some sentence already in KB or new
-                        if all([self.unifier.unify(newAtom, sentence) == None for sentence in (atomicSentences + new)]):
-                            # Add q' to new
-                            new.append(newAtom)
-                            # phi <- Unify(q', query)
-                            # If phi is not fail, then return phi
-                            phi = self.unifier.unify(newAtom, query)
-                            if (phi != None):
-                                return self.substituer.substitution(phi, query)
-            # add new to KB
-            # Remark: I add it to the atomicSentences, s.t. I do not have to loop over them as rules.
-            atomicSentences  = atomicSentences+new
-        # Return false
-        return False
     
     def fol_fc_ask_toAndOrTree(self, program: tuple[Clause], queries: list[Term]):
         """
@@ -145,7 +84,9 @@ class ForwardChaining(LogicEngine):
         self.var_count = 0  # A counter, used to make unused Variables.
         KB = list(program)
         # Extract all atomic sentences in the KB and remove them from the KB
-        atomicSentences = self._extractAtomicSentences(KB)
+        atomicSentences, structuredAtomicSentences = self._extractAtomicSentences(KB)
+        
+
         ## New: now, atomicSentences and new are dictionaries. This is to easily construct the and-or-tree.
         # The keys of this dictionary are the string representations of the atomic sentences. 
         # The values of this dictionary are tuples with the first element equal to the atomic sentence 
@@ -160,6 +101,8 @@ class ForwardChaining(LogicEngine):
             
             # new <- {}
             new = {}
+            newstructuredAtomicSentences = {}
+
             # For each rule in KB do
             for rule in KB: # Remark: I do not look at atomic sentences
                 
@@ -167,8 +110,9 @@ class ForwardChaining(LogicEngine):
                 updatedRule = self._standardize_variables(rule, {})
 
                 # For each theta such that Subst(theta, p1 ^ p2 ^ ... ^ pn) = Subst(theta, p1' ^ p2' ^ ... ^ pn') for some p1', p2', ..., pn' in KB
-                for ps in list(product(self._aux(atomicSentences), repeat=len(updatedRule.body))):
-                    subst = self.unifier.unifyMultiple(updatedRule.body, list(ps)) # Remark: I take the most general theta.
+                #for ps in list(product(self._aux(atomicSentences), repeat=len(updatedRule.body))):
+                #    subst = self.unifier.unifyMultiple(updatedRule.body, list(ps)) # Remark: I take the most general theta.
+                for subst in self._findEachTheta(updatedRule.body, structuredAtomicSentences):
 
                     if subst != None:
                         # q' <- Subst(theta, q)
@@ -178,38 +122,46 @@ class ForwardChaining(LogicEngine):
                         # NEW: Checking whether "q' does not unify with some sentence already in KB or new" is not appropriate anymore,
                         # as we want to find all possible derivations
                         
-                        # NEW: If the new atom was already derived, then it is possible that we have a new derivation.
-                        if str(newAtom) in atomicSentences.keys():
-                            # If one of the terms in the body was derived in the previous iteration, then it is a new derivation (else it would have been derived before).
-                            flag = False
-                            for b in substitutedrule.body:
-                                if str(b) in last.keys():
-                                    flag = True
-                            if flag:
-                                # It is a new derivation, so create an OR Node with the previous and-or-tree as a child and the new derivation as the other child.
-                                if isinstance(atomicSentences[str(newAtom)][1], ORNode):
-                                    # this is just some renaming to have pretty printing, this is not important to construct the and-or-tree
-                                    atomicSentences[str(newAtom)][1].name = ""
-                                atomicSentences[str(newAtom)] =(newAtom, ORNode(self._makeAnd(substitutedrule.body, atomicSentences, str(newAtom)), atomicSentences[str(newAtom)][1], str(newAtom)))
-                        # NEW:  If the new atom was already derived this iteration, then this is also a new derivation.
-                        elif str(newAtom) in new.keys():
-                            # Create an OR node in an analogous way.
-                            if isinstance(new[str(newAtom)][1], ORNode):
-                                # again some pretty printing.
-                                new[str(newAtom)][1].name = ""
-                            new[str(newAtom)] =(newAtom, ORNode(self._makeAnd(substitutedrule.body, atomicSentences, str(newAtom)), new[str(newAtom)][1], str(newAtom)))
-                        # The new atom has not been derived yet, so just create an AND node.
-                        else:
-                            # Add q' to new
-                            new[str(newAtom)] = (newAtom, self._makeAnd(substitutedrule.body, atomicSentences, str(newAtom)))
-                        
-                        # NEW: Checking if a valid unification between q' and query exists, is not appropriate anymore
-                        # as we want to find all possible derivations
+                        hasNoVars = True
+                        for i in substitutedrule.head.arguments:
+                            if isinstance(i, Variable):
+                                hasNoVars = False
+                                break
+                        if hasNoVars:
+                            # NEW: If the new atom was already derived, then it is possible that we have a new derivation.
+                            if str(newAtom) in atomicSentences.keys():
+                                # If one of the terms in the body was derived in the previous iteration, then it is a new derivation (else it would have been derived before).
+                                flag = False
+                                for b in substitutedrule.body:
+                                    if str(b) in last.keys():
+                                        flag = True
+                                if flag:
+                                    # It is a new derivation, so create an OR Node with the previous and-or-tree as a child and the new derivation as the other child.
+                                    if isinstance(atomicSentences[str(newAtom)][1], ORNode):
+                                        # this is just some renaming to have pretty printing, this is not important to construct the and-or-tree
+                                        atomicSentences[str(newAtom)][1].name = ""
+                                    atomicSentences[str(newAtom)] =(newAtom, ORNode(self._makeAnd(substitutedrule.body, atomicSentences, str(newAtom)), atomicSentences[str(newAtom)][1], str(newAtom)))
+                            # NEW:  If the new atom was already derived this iteration, then this is also a new derivation.
+                            elif str(newAtom) in new.keys():
+                                # Create an OR node in an analogous way.
+                                if isinstance(new[str(newAtom)][1], ORNode):
+                                    # again some pretty printing.
+                                    new[str(newAtom)][1].name = ""
+                                new[str(newAtom)] =(newAtom, ORNode(self._makeAnd(substitutedrule.body, atomicSentences, str(newAtom)), new[str(newAtom)][1], str(newAtom)))
+                            # The new atom has not been derived yet, so just create an AND node.
+                            else:
+                                # Add q' to new
+                                new[str(newAtom)] = (newAtom, self._makeAnd(substitutedrule.body, atomicSentences, str(newAtom)))
+                                self._add(newstructuredAtomicSentences, newAtom.functor, newAtom.arguments)
+                            
+                            # NEW: Checking if a valid unification between q' and query exists, is not appropriate anymore
+                            # as we want to find all possible derivations
 
             # add new to KB
             # Remark: I add it to the atomicSentences, s.t. I do not have to loop over them as rules.
             last = new
             atomicSentences.update(new)
+            structuredAtomicSentences.update(newstructuredAtomicSentences)
 
         # Return the constructed tree for each query in queries.
         # If not tree has been constructed for a query, it means it has no derivation and thus is always false.
@@ -220,8 +172,34 @@ class ForwardChaining(LogicEngine):
                 res.append( atomicSentences[str(query)][1] )
             else:
                 res.append( FactNode(0, name = str(query)) )
-                
         return AndOrTree(res, queries)
+
+    def _findEachTheta(self, body, atoms):
+        for condition in body:
+            if not str(condition.functor) in atoms.keys():
+                return []
+            
+        un = Unifier()
+        su = Substituer()
+        condition = body[0]
+        possibilities = []
+        for i in atoms[str(condition.functor)].copy():
+            s = un.unifyMultiple(condition.arguments, i)
+            if not s == None and s not in possibilities:
+                possibilities.append(s)
+        possibilities = self._remove_duplicates(possibilities)
+
+        for condition in body[1:]:
+            newPossibilities = []
+            for i in atoms[str(condition.functor)].copy():
+                for sbst in possibilities:
+                    args = tuple(su.multipleSubstitution(sbst, list(condition.arguments)))
+                    s = un.unifyMultiple(i, args)
+                    if not s == None and sbst+s not in newPossibilities:
+                        newPossibilities.append((sbst+s).copy())
+            possibilities = newPossibilities.copy()
+
+        return possibilities
     
     def _standardize_variables(self,rule: Clause|Term|Variable, subst: dict[str, Variable] = {}):
         """
@@ -275,6 +253,14 @@ class ForwardChaining(LogicEngine):
         for rule in res:
             KB.remove(rule)
         return [rule.head for rule in res]
+    
+    
+    def _add(self, d, k, e):
+        if k in d.keys():
+            d[k].append(e)
+        else:
+            d[k] = [e] 
+        return None
         
     def _extractAtomicSentences(self, KB: list[Clause]) -> dict[str, tuple[Term, LeafNode]]:
         """
@@ -293,6 +279,7 @@ class ForwardChaining(LogicEngine):
             second element equal to its and-or-tree node.
         """
         atomicSentences = []
+        structuredAtomicSentences = {}
         res = {}
         for rule in KB:
             if isinstance(rule, Fact):
@@ -304,16 +291,16 @@ class ForwardChaining(LogicEngine):
                     res[str(rule.term)] = (rule.term, NeuralNode(rule.weight.arguments[0], rule.weight.arguments[1].arguments[1], rule.weight.arguments[2], name=str(rule.term)))
                 else:
                     res[str(rule.term)] = (rule.term, FactNode(float(str(rule.weight)), name = str(rule.term)))
-
-                
+                self._add(structuredAtomicSentences, str(rule.term.functor), rule.term.arguments)
 
             if isinstance(rule, Clause) and len(rule.body) == 0:
                 atomicSentences.append(rule)
                 # A clause with an empty body, is just a fact with weight 1 as it is always satisfied.
                 res[str(rule.head)] = (rule.head, FactNode(1, True, str(rule.head)))
+                self._add(structuredAtomicSentences, str(rule.head.functor), rule.head.arguments)
         for rule in atomicSentences:
             KB.remove(rule)
-        return res
+        return res, structuredAtomicSentences
         
     def _aux(self, d):
         "An auxilary function that returns the list of first elements of the values in a given dictionary."
