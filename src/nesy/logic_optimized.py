@@ -82,16 +82,14 @@ class ForwardChaining(LogicEngine):
             The and-or-tree of the query. If the query has no possible derivation, the result is a Fact Node with weight 0.
         """
         self.var_count = 0  # A counter, used to make unused Variables.
-        KB = list(program)
+        KB = self.structureKB(list(program))
         # Extract all atomic sentences in the KB and remove them from the KB
-        atomicSentences, structuredAtomicSentences = self._extractAtomicSentences(KB)
-        
-
+        atomicSentences, structuredAtomicSentences = self._extractAtomicSentences(list(program))
         ## New: now, atomicSentences and new are dictionaries. This is to easily construct the and-or-tree.
         # The keys of this dictionary are the string representations of the atomic sentences. 
         # The values of this dictionary are tuples with the first element equal to the atomic sentence 
         # and the second element equal to its and-or-tree node.
-        new = {None: None}
+        new = atomicSentences
         ## New: keep track of the atomic sentences that were added in the previous iteration,
         # This will be necessary to check if a derivation is a new one or not.
         last = {}
@@ -99,12 +97,14 @@ class ForwardChaining(LogicEngine):
         # Repeat until new is empty
         while len(new.keys())>0:
             
+            triggeredRules = self.findRules(KB, self._aux(new))
+
             # new <- {}
             new = {}
             newstructuredAtomicSentences = {}
 
             # For each rule in KB do
-            for rule in KB: # Remark: I do not look at atomic sentences
+            for rule in triggeredRules: # Remark: I do not look at atomic sentences
                 
                 # (p1 ^ p2 ^ ... ^ pn => q) <- Standardize-Variables(rule)
                 updatedRule = self._standardize_variables(rule, {})
@@ -173,11 +173,36 @@ class ForwardChaining(LogicEngine):
             else:
                 res.append( FactNode(0, name = str(query)) )
         return AndOrTree(res, queries)
+    
+    def structureKB(self, program):
+        res = {}
+        for rule in program:
+            if isinstance(rule, Clause):
+                for arg in rule.body:
+                    self._add(res, arg.functor, (arg, rule))
+        return res
+
+    def findRules(self, KB, newstructuredAtomicSentences):
+        res = []
+        for atom in newstructuredAtomicSentences:
+            if atom.functor in KB.keys():
+                for rule in KB[atom.functor]:
+                    #newrule = self.substituer.substitution(self.unifier.unify(rule[0], atom), rule[1])
+                    newrule = rule[1]
+                    if newrule not in res:
+                        res.append(newrule)
+        return res
+
+
 
     def _findEachTheta(self, body, atoms):
+        lengths = []
         for condition in body:
             if not str(condition.functor) in atoms.keys():
                 return []
+            lengths.append(len(atoms[str(condition.functor)]))
+
+        body = [i for _,i in sorted(zip(lengths,body))]
             
         un = Unifier()
         su = Substituer()

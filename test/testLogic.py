@@ -8,6 +8,9 @@ from nesy.parser import parse_program, parse_clause, parse_term
 from nesy.logic_optimized import ForwardChaining
 from nesy.term import Clause
 
+import time
+start = time.time()
+
 x = """b :- a, d.
 e :- b, c.
 0.8 :: a.
@@ -281,3 +284,4 @@ assert (str(tree).split() == """- ORNode : f(a,b)
                          - True""".split())
 
 
+print(time.time()-start)
