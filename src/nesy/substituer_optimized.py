@@ -11,16 +11,16 @@ class Substituer():
 
     def multipleSubstitution(self, substitution: list[tuple[Variable, Term|Variable|Clause]], query: list[Term|Variable|Clause]):
         """
-        Apply the given substitution on the query.
+        Apply the given substitution on a list of queries.
 
         Arguments
         ---------
             substitution: A list of tuples in which the first element is a variable and the second element is its substitution, that satisfies the method self._isValidSubstition
-            query: A term, clause or variable on which you want to apply the substitution.
+            query: A list of a term, clause or variable on which you want to apply the substitution.
 
         Returns
         -------
-            The query on which the substitution has been applied
+            The list of queries on which the substitution has been applied
         """
         res = []
         for i in query:
