@@ -3,6 +3,7 @@ start.sh
 stop.sh
 test.py
 data/
+logs/
 lightning_logs/
 logs/
 __pycache__/
