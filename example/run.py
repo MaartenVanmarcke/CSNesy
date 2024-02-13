@@ -30,9 +30,8 @@ model = NeSyModel(program=task_train.program,
                   neural_predicates=neural_predicates,
                   label_semantics=SumProductSemiring(),use_nn_caching=use_nn_caching)
 
-print("model defined")
 trainer = pl.Trainer(max_epochs=1,logger=logger,log_every_n_steps=1)
-print("trainer defined")
 trainer.fit(model=model,
-            train_dataloaders=task_train.dataloader(batch_size=2),
-            val_dataloaders=task_test.dataloader(batch_size=2))
+            train_dataloaders=task_train.dataloader(batch_size=16),
+            val_dataloaders=task_test.dataloader(batch_size=16))
+

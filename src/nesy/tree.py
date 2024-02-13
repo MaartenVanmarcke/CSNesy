@@ -223,6 +223,13 @@ class AndOrTree():
 
         return res
     
+    def __repr__(self) -> str:
+        res = ""
+        for q in self.queries:
+            res += q.__repr__()
+            res += "\n"
+        return res
+    
     def findQuery(self, query: Term):
         """
         Returns the index of the given query in the self.terms list.
