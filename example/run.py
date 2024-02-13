@@ -6,7 +6,7 @@ sys.path.insert(0,os.path.join(current, 'src'))
 #
 from nesy.model import NeSyModel, MNISTEncoder
 from dataset import AdditionTask
-from nesy.logic import ForwardChaining
+from nesy.logic_optimized import ForwardChaining
 from nesy.semantics import SumProductSemiring
 
 import torch
@@ -22,10 +22,11 @@ task_test = AdditionTask(n_classes=2, n=n_digits,train=False)
 
 neural_predicates = torch.nn.ModuleDict({"digit": MNISTEncoder(task_train.n_classes)})
 
-tree_caching = True
+tree_caching = False
 use_nn_caching = True
 model = NeSyModel(program=task_train.program,
-                  logic_engine=ForwardChaining(caching_used=tree_caching),
+                logic_engine=ForwardChaining(),
+                #   logic_engine=ForwardChaining(caching_used=tree_caching),
                   neural_predicates=neural_predicates,
                   label_semantics=SumProductSemiring(),use_nn_caching=use_nn_caching)
 

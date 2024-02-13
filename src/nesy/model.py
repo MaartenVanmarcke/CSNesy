@@ -5,7 +5,7 @@ import numpy as np
 import nesy.parser
 from nesy.semantics import Semantics
 from nesy.term import Clause, Term
-from nesy.logic import LogicEngine
+from nesy.logic_optimized import LogicEngine
 from torch import nn
 from sklearn.metrics import accuracy_score
 from nesy.evaluator import Evaluator
