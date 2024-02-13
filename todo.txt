@@ -7,6 +7,9 @@ TODO:
 
 - merge: all relevant things together
         * Arguments (basic evaluator, merged tree evaluator, n)
+        * Merged trees moet kunnen samenwerken met de basic evaluator
+
+- experiments: volgend semester, maar wel eens uitproberen 
                 * TODO fix infinite loop with n_digits!!
 
 - Is de evaluator juist?
@@ -23,6 +26,24 @@ TODO:
 - 2 extra experiments + optimization
     bv
         - caching? Impact on performance?
+                * Caching van de boom : per epoch
+                * Caching van de neurale netten : per iteratie
+        - improved forward chaining algorithm
+                * FC uitbreiden
+
+- new application proposal : Sem 2, maar al over nadenken
+
+
+- write report : Sem 2
+
+
+SEMESTER 1:
+ * Evaluation set -> Maarten
+ * All relevent things mergen (arguments, merged trees moet samenwerken met basic evaluator, etc.) -> Eli
+ * Caching -> Eli
+ * FC algorithm -> Maarten
+
+
                 * Caching van de boom : per epoch -> done
                 * Caching van de neurale netten : per iteratie -> done
         - robustness to input -> add noise

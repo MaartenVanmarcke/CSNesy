@@ -5,4 +5,6 @@ test.py
 data/
 logs/
 lightning_logs/
+logs/
 __pycache__/
+src/nesy/temp.py

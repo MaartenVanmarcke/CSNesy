@@ -24,7 +24,7 @@ def custom_collate(batch):
 class AdditionTask(Dataset):
 
     def __init__(self, n=2, train=True, n_classes=10, nr_examples=None):
-        assert n == 2, "Only n=2 is supported at the moment"
+        # assert n == 2, "Only n=2 is supported at the moment"
         self.train = train
 
         # We iterate over the MNIST dataset to apply the transform
@@ -38,15 +38,48 @@ class AdditionTask(Dataset):
         self.original_targets = torch.tensor(self.original_targets)
         self.n_classes = n_classes # number of possible results of the sum
         self.num_digits = n # number of digits to sum together
-        program_string = "addition(X,Y,Z) :- digit(X,N1), digit(Y,N2), add(N1,N2,Z).\n"
+
+        # Start constructing the string: it shoud consist of addition(,,,Z):- digit(,), digit(,), ..., add(,,Z)
+        program_string = "addition("
+        # the program_string_helper constructs the part of digit(X_i,N_i)
+        program_string_helper = ""
+        # The vars keep track of all variables that have to added
+        vars = []
+        for i in range(self.num_digits):
+            program_string +=f"X_{str(i)},"
+            program_string_helper += f"digit(X_{i},N_{i}), "
+            vars.append(f'N_{i}')
+
+        program_string += "Z):- "
+        # add the digit-declarations to the program string
+        program_string += program_string_helper
+        interm_res_i = 0
+        
+        # create intermediate results, (add 2 of the elements in vars) until there are only 2 elements left. Since then they will lead to the final result
+        # The form if this intermediate result is add(N_0,N_1,Z_0) or add(Z_0,N_2,Z_1)
+        while(len(vars)>2):
+            program_string += f"add({vars[0]}, {vars[0+1]}, Z_{interm_res_i}), "
+            
+            # the first two elements of vars are deleted (since they have just been processed)
+            # the intermediate result Z_i is added to var -> it needs to be added as well! 
+            vars[1] = f'Z_{interm_res_i}'
+            vars = vars[1:]
+            interm_res_i+=1
+
+        # The final 2 elements lead to the final result of Z.
+        program_string += f"add({vars[0]}, {vars[1]},Z).\n"
+
+        # program_string = "addition(X,Y,Z) :- digit(X,N1), digit(Y,N2), add(N1,N2,Z).\n"
+
         program_string += "\n".join(
             [f"add({x}, {y}, {x + y})." for x in range(self.n_classes) for y in range(self.n_classes)])
         program_string += "\n"
         program_string += "\n".join(
             [f"nn(digit, tensor(images, {x}), {y}) :: digit(tensor(images, {x}),{y})." for x, y in
              product(range(self.num_digits), range(self.n_classes))])
+        
         self.program = parse_program(program_string)
-
+        
         if nr_examples is not None:
             if nr_examples > self.nr_examples:
                 raise ValueError('nr_examples exceeds to number of available examples in this dataset')
@@ -64,7 +97,15 @@ class AdditionTask(Dataset):
             # In MNIST Addition, training queries for a single pair of images check for a given sum (i.e. the target)
             # Therefore, we have a List[Term], each element of the list correspond to a single pair of images
 
-            query = parse_program("addition(tensor(images, 0), tensor(images,1), {}).".format(target))[0].term
+            # query = parse_program("addition(tensor(images, 0), tensor(images,1), {}).".format(target))[0].term
+
+            terms = "addition("
+            for i in range(self.num_digits):
+                terms += "tensor(images, " +str(i) + "), "
+
+            terms+= "{}).".format(target)
+            query = parse_program(terms)[0].term
+
             tensor_sources = {"images": images}
 
             return tensor_sources, query, torch.tensor([1.0])
@@ -73,9 +114,18 @@ class AdditionTask(Dataset):
             # In this way, we can compute the most probable sum.
             # Therefore, we have a List[List[Term]], each element of the outer list correspond to a single pair of
             # images. Each element of the inner list correspond to a possible sum.
+            queries = []
+            for z in range(self.n_classes * 2 - 1):
 
-            queries = [parse_program("addition(tensor(images, 0), tensor(images,1), {}).".format(z))[0].term
-                       for z in range(self.n_classes * 2 - 1)]
+                terms = "addition("
+                for i in range(self.num_digits):
+                    terms += "tensor(images, " +str(i) + "), "
+                
+                terms+= "{}).".format(z)
+                queries.append(parse_program(terms)[0].term) 
+                  
+            # queries = [parse_program("addition(tensor(images, 0), tensor(images,1), {}).".format(z))[0].term
+            #            for z in range(self.n_classes * 2 - 1)]
             tensor_sources = {"images": images}
 
             return tensor_sources, queries, target

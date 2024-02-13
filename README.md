@@ -13,3 +13,46 @@ Volgende week: dinsdag : structuur bekijken (5/12)
 22/12 : experimenteren & report
 
 
+## Questions:
+
+- isnt it redundant to give queries to evaluator since they are IN the tree(s)?
+- How to handle NN: give already to tree (makes sense) or not (as suggestedby the skeleton)?
+- NN models are now still strings -> need to change! Maybe give the evaluator a dict with the names of NN (the strings already in the node) + the real NN?
+
+- Why seperation of "images" and tensor images?   Why is the tensor only passed when evaluating? Maybe makes more sense to insert them in tree directly? OR now andor tree just build from strings/queries?
+
+## Further optimizations:
+
+- maybe optimized Forward Chaining (but only maybe)
+- use an application where more than 1 NN is needed -> could be interesting
+
+
+# Used:
+
+$ source /Users/eli/Documents/unif/master_2/capita_selecta/CSNesy/.venv/bin/activate
+
+$ tensorboard --logdir logs/
+-> ga naar http://localhost:6006 voor training loss 
+
+
+addition(tensor(images,0),tensor(images,1),0), addition(tensor(images,0),tensor(images,1),1), addition(tensor(images,0),tensor(images,1),2)
+
+
+([addition(tensor(images,0),tensor(images,1),0), addition(tensor(images,0),tensor(images,1),1), addition(tensor(images,0),tensor(images,1),2)]
+, 
+[addition(tensor(images,0),tensor(images,1),0), addition(tensor(images,0),tensor(images,1),1), addition(tensor(images,0),tensor(images,1),2)])
+
+
+
+[addition(tensor(images,0),tensor(images,1),0), addition(tensor(images,0),tensor(images,1),1), addition(tensor(images,0),tensor(images,1),2), addition(tensor(images,0),tensor(images,1),0), addition(tensor(images,0),tensor(images,1),1), addition(tensor(images,0),tensor(images,1),2)]
+
+
+-----
+
+addition(tensor(images,0),tensor(images,1),2)
+addition(tensor(images,0),tensor(images,1),2)
+in forward
+
+(addition(tensor(images,0),tensor(images,1),2), addition(tensor(images,0),tensor(images,1),2))
+
+(addition(tensor(images,0),tensor(images,1),2), addition(tensor(images,0),tensor(images,1),2))
