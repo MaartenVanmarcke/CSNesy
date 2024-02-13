@@ -6,7 +6,7 @@ sys.path.insert(0,os.path.join(current, 'src'))
 #
 from nesy.model import NeSyModel, MNISTEncoder
 from dataset import AdditionTask
-from nesy.logic import ForwardChaining
+from nesy.logic_optimized import ForwardChaining
 from nesy.semantics import SumProductSemiring
 
 import torch
@@ -15,8 +15,8 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 logger = TensorBoardLogger(save_dir="logs/", name="model")  
 
-n_digits =3
-n_classes =2
+n_digits =2
+n_classes =3
 task_train = AdditionTask(n=n_digits,n_classes=n_classes)
 task_test = AdditionTask(n=n_digits,n_classes=n_classes, train=False)
 
@@ -26,7 +26,7 @@ neural_predicates = torch.nn.ModuleDict({"digit": MNISTEncoder(task_train.n_clas
 tree_caching = True
 use_nn_caching = False
 model = NeSyModel(program=task_train.program,
-                  logic_engine=ForwardChaining(caching_used=tree_caching),
+                  logic_engine=ForwardChaining(),
                   neural_predicates=neural_predicates,
                   label_semantics=SumProductSemiring(),use_nn_caching=use_nn_caching)
 
