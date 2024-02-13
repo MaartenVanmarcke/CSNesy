@@ -39,9 +39,15 @@ class Clause(namedtuple('Clause', ['head', 'body'])):
         return str(self.head) + " :- " + ",".join([str(a) for a in self.body])
     
     def __eq__(self, __value: object) -> bool:
-        return (isinstance(__value, Clause)
+        if (isinstance(__value, Clause)
                 and self.head == __value.head
-                and Counter(self.body) == Counter(__value.body))
+                and len(self.body) == len(__value.body)):
+            for i in range(len(self.body)):
+                if self.body[i] != __value.body[i]:
+                    return False
+            return True
+        else:
+            return False
     
     def __contains__(self, __key: object) -> bool:
         if isinstance(__key, Variable):
