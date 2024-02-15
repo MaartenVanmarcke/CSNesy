@@ -163,7 +163,7 @@ class NeuralNode(LeafNode):
         res += "\n\t - " + str(self.model) + "\n\t - " + str(self.index) + "\n\t - " + str(self.query)
         return res
 
-    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates,nn_results_cache:dict|None): #TODO I think the neural_predicates should be given as well _>access NN by using name of NN
+    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates,nn_results_cache:dict|None):
         """
         The evaluation of a neural fact leaf node is the output of the neural network of this node
         for the given input.
@@ -171,9 +171,11 @@ class NeuralNode(LeafNode):
         
         # STEP 1 if nn_results_cache is used, check if the neural network has not already been evaluated
         if nn_results_cache is not None:
+            print(self.index)
+            print(self.query)
             cached = nn_results_cache.get(self.index)
-            # print("from cache: ", cached)
             if cached is not None:
+                print("cached")
                 return cached[:, self.query]
             
         # STEP 2: get the neural network of the leaf
@@ -187,6 +189,7 @@ class NeuralNode(LeafNode):
         
         #STEP 5: if nn_results_cache is used, store the obtained result of the nn
         if nn_results_cache is not None:
+            print("stored in cache")
             nn_results_cache[self.index] = pred_of_network
 
         #STEP 6: return the relevant prediction 
