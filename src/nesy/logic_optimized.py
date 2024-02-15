@@ -189,11 +189,12 @@ class ForwardChaining(LogicEngine):
                 query = queries[query_index]
                 if res[query_index] is None:
                     if str(query) in atomicSentences.keys():
-                        res.append( atomicSentences[str(query)][1] )
+                        
+                        res[query_index] = atomicSentences[str(query)][1] 
                         # cache this tree for the future!
                         self.cache_of_trees[str(query)]= atomicSentences[str(query)][1]
                     else:
-                        res.append( FactNode(0, name = str(query)) )
+                        res[query_index]= FactNode(0, name = str(query)) 
         return AndOrTree(res, queries)
     
     def structureKB(self, program):
