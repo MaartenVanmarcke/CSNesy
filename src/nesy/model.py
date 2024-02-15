@@ -81,6 +81,7 @@ class NeSyModel(pl.LightningModule):
 
 
     def validation_step(self, I, batch_idx):
+        # print("validating")
         tensor_sources, queries, y_true = I    
         # the true y (of y_trues) gives the index of the correct query (of queries)
         #for example: for the queries = ([addition(tensor(images,0),tensor(images,1),0), addition(tensor(images,0),tensor(images,1),1), addition(tensor(images,0),tensor(images,1),2)], [addition(tensor(images,0),tensor(images,1),0), addition(tensor(images,0),tensor(images,1),1), addition(tensor(images,0),tensor(images,1),2)]) 
@@ -92,7 +93,7 @@ class NeSyModel(pl.LightningModule):
         y_preds = self.forward(tensor_sources, queries)
         #STEP 2: reorder the y_preds: select for group of queries the prediction with the highest probability. Do this for every image
         accuracy = accuracy_score(torch.argmax(y_preds, dim = 1), y_true)  
-        self.log("test_acc", accuracy, on_step=True, on_epoch=True, prog_bar=True)
+        self.log("test_acc", accuracy, on_step=True, on_epoch=True)
         return accuracy
 
     def configure_optimizers(self):

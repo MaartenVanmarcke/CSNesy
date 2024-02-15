@@ -26,14 +26,18 @@ neural_predicates = torch.nn.ModuleDict({"digit": MNISTEncoder(task_train.n_clas
 
 tree_caching = True
 use_nn_caching = False
+use_validation_set = True   # be able to see accuracy evolve over training BUT significantly slows everything down!
 model = NeSyModel(program=task_train.program,
                   logic_engine=ForwardChaining(tree_caching),
                   neural_predicates=neural_predicates,
                   label_semantics=SumProductSemiring(),use_nn_caching=use_nn_caching)
 
-trainer = pl.Trainer(max_epochs=1,logger=logger,log_every_n_steps=1)
-
+if use_validation_set:
+    trainer = pl.Trainer(max_epochs=1,logger=logger,log_every_n_steps=1,val_check_interval=1)
+else:
+    trainer = pl.Trainer(max_epochs=1,logger=logger,log_every_n_steps=1)
+batch_size = 64
 trainer.fit(model=model,
-            train_dataloaders=task_train.dataloader(batch_size=16),
-            val_dataloaders=task_test.dataloader(batch_size=16))
+            train_dataloaders=task_train.dataloader(batch_size=batch_size),
+            val_dataloaders=task_test.dataloader(batch_size=1024))
 
