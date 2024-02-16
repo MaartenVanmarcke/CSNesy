@@ -92,12 +92,12 @@ class ForwardChaining(LogicEngine):
                 if cached_tree is not None:
                     # print("Cache found!")
                     res[q] = cached_tree
-                else:
-                    print("not in cache")
+                # else:
+                #     print("not in cache")
             #check if every query was cached -> result can already be returned!        
             if None not in res:
                 return AndOrTree(res, queries)
-            else: print("not all queries cached")
+            # else: print("not all queries cached")
 
             
         self.var_count = 0  # A counter, used to make unused Variables.
