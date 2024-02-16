@@ -71,8 +71,12 @@ class AdditionTask(Dataset):
 
         # program_string = "addition(X,Y,Z) :- digit(X,N1), digit(Y,N2), add(N1,N2,Z).\n"
 
-        program_string += "\n".join(
-            [f"add({x}, {y}, {x + y})." for x in range(self.n_classes) for y in range(self.n_classes)])
+        max_value_term = (self.num_digits -1)*(self.n_classes-1) 
+        for x in range(max_value_term+1):
+            for y in range(max_value_term+1):
+                if x + y < self.num_digits*(self.n_classes-1) + 1: #the values larger than this self.num_digits*(self.n_classes-1) are not possibe
+                     program_string += "\n".join([f"add({x}, {y}, {x + y})."] )
+
         program_string += "\n"
         program_string += "\n".join(
             [f"nn(digit, tensor(images, {x}), {y}) :: digit(tensor(images, {x}),{y})." for x, y in

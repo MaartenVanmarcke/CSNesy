@@ -55,22 +55,14 @@ class NeSyModel(pl.LightningModule):
      
         #STEP 1: return and or tree
         # >> STEP 1A: in the case of training, the queries are List[Term]
-        # print("FORWARD")
-        # print(">> queries ", queries)
+
         if isinstance(queries[0], Term):
             and_or_tree = self.logic_engine.reason(self.program, queries)
-        
+            
         # >> STEP 2A: evaluate every tree given the images in tensor_sources
             return self.evaluator.evaluate(tensor_sources, and_or_tree, queries)
 
         # >> STEP 1B: in the case of testing, the queries are List[List[Term]]
-        # else:
-        #     results = []
-            
-        #     for group_queries in queries:
-        #          and_or_tree = self.logic_engine.reason(self.program, group_queries)
-        #  # >> STEP 2B: evaluate  every tree given the images in tensor_sources
-        #          results.append(self.evaluator.evaluate(tensor_sources, and_or_tree, group_queries))
         else:
 
             # and_or_tree = self.logic_engine.reason(self.program, list( chain.from_iterable(queries))) 
@@ -88,11 +80,8 @@ class NeSyModel(pl.LightningModule):
     def training_step(self, I, batch_idx):    
         tensor_sources, queries, y_true = I
         y_preds = self.forward(tensor_sources, queries)
-        # print("PREDICTION: ", y_preds)
-        # print("TRUE:", y_true)
         y_preds_correct_size = torch.stack(y_preds) 
-        # print("CORRECTED", y_preds_correct_size)
-        # print( y_true.squeeze())
+        
         loss = self.bce(y_preds_correct_size, y_true.squeeze())
         self.log("train_loss", loss, on_epoch=True, prog_bar=True)
         return loss
@@ -104,12 +93,7 @@ class NeSyModel(pl.LightningModule):
 
         tensor_sources, queries, y_true = I
 
-        y_preds_proba = self.forward(tensor_sources, queries)
-        # for inner in y_preds_proba:
-        #     print(torch.stack(inner))
-        #     print(torch.argmax(torch.stack(inner)))
-        # calculate the predicted classes by taking the argmax of the predictions
-        # print(y_preds_proba)
+        y_preds_proba = self.forward(tensor_sources, queries)       
         y_preds = [torch.argmax(torch.stack(inner)) for inner in y_preds_proba]
 
         accuracy = accuracy_score(y_true, y_preds)

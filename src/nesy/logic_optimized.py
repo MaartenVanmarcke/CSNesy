@@ -83,6 +83,7 @@ class ForwardChaining(LogicEngine):
         """
         self.var_count = 0  # A counter, used to make unused Variables.
         KB = self.structureKB(list(program))
+        
         # Extract all atomic sentences in the KB and remove them from the KB
         atomicSentences, structuredAtomicSentences = self._extractAtomicSentences(list(program))
         ## New: now, atomicSentences and new are dictionaries. This is to easily construct the and-or-tree.

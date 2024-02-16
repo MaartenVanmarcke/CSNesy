@@ -15,22 +15,27 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 logger = TensorBoardLogger(save_dir="logs/", name="model")  
 
-n_classes = 2
-n_digits = 2
-task_train = AdditionTask(n_classes=n_classes,n=n_digits)
-task_test = AdditionTask(n_classes=2, n=n_digits,train=False)
+n_digits =2
+n_classes =2
+task_train = AdditionTask(n=n_digits,n_classes=n_classes)
+task_test = AdditionTask(n=n_digits,n_classes=n_classes, train=False)
 
 neural_predicates = torch.nn.ModuleDict({"digit": MNISTEncoder(task_train.n_classes)})
 
-tree_caching = False
-use_nn_caching = True
+tree_caching = True
+use_nn_caching = False
+use_validation_set = False   # be able to see accuracy evolve over training BUT significantly slows everything down!
 model = NeSyModel(program=task_train.program,
-                logic_engine=ForwardChaining(),
-                #   logic_engine=ForwardChaining(caching_used=tree_caching),
+                #   logic_engine=ForwardChaining(tree_caching),
+                    logic_engine=ForwardChaining(),
                   neural_predicates=neural_predicates,
                   label_semantics=SumProductSemiring(),use_nn_caching=use_nn_caching)
 
-trainer = pl.Trainer(max_epochs=1,logger=logger,log_every_n_steps=1)
+if use_validation_set:
+    trainer = pl.Trainer(max_epochs=1,logger=logger,log_every_n_steps=1,val_check_interval=1)
+else:
+    trainer = pl.Trainer(max_epochs=1,logger=logger,log_every_n_steps=1)
+batch_size = 64
 trainer.fit(model=model,
-            train_dataloaders=task_train.dataloader(batch_size=16),
-            val_dataloaders=task_test.dataloader(batch_size=16))
+            train_dataloaders=task_train.dataloader(batch_size=batch_size),
+            val_dataloaders=task_test.dataloader(batch_size=batch_size))

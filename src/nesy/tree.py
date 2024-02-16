@@ -210,33 +210,32 @@ class AndOrTree():
         self.queries = queries
         self.terms = terms
 
-    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates:torch.nn.ModuleDict,image_seq_nb=-1,use_nn_caching=False):
+    def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates:torch.nn.ModuleDict,queries, image_seq_nb=-1,use_nn_caching=False):
         """
         Evaluates the full and-or-tree for the given inputs.
         """
-        res = torch.zeros((tensor_sources["images"].size()[0], len(self.queries)))
+        res = torch.zeros((tensor_sources["images"].size()[0], len(queries)))
 
         res = []
 
         # Evaluate each query
-        # print("EVALUATING TREE")
-        # print("<< queries", self.queries)
         if image_seq_nb < 0:
-            for i in range(len(self.queries)):
+            for i in range(len(queries)):
                 if use_nn_caching:
                     nn_cache = dict()   #TODO where to initialze this?
                 else:
                     nn_cache = None
                 # print("<< ", i)
-                res.append(self.queries[i].evaluate(tensor_sources, semantics, neural_predicates,i,nn_cache))
+                    
+                res.append(self.queries[self.findQuery(queries[i])].evaluate(tensor_sources, semantics, neural_predicates,i,nn_cache))
                
         else:
-             for i in range(len(self.queries)):
+             for i in range(len(queries[0])):
                 if use_nn_caching:
-                    nn_cache = dict()   #TODO where to initialze this?
+                    nn_cache = dict()  
                 else:
                     nn_cache = None
-                res.append(self.queries[i].evaluate(tensor_sources, semantics, neural_predicates,image_seq_nb,nn_cache))
+                res.append(self.queries[self.findQuery(queries[0][i])].evaluate(tensor_sources, semantics, neural_predicates,image_seq_nb,nn_cache))
             
         return res
     
