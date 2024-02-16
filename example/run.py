@@ -15,7 +15,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 logger = TensorBoardLogger(save_dir="logs/", name="model")  
 
-n_digits =2
+n_digits =3
 n_classes =2
 task_train = AdditionTask(n=n_digits,n_classes=n_classes)
 task_test = AdditionTask(n=n_digits,n_classes=n_classes, train=False)
@@ -26,8 +26,7 @@ tree_caching = True
 use_nn_caching = False
 use_validation_set = False   # be able to see accuracy evolve over training BUT significantly slows everything down!
 model = NeSyModel(program=task_train.program,
-                #   logic_engine=ForwardChaining(tree_caching),
-                    logic_engine=ForwardChaining(),
+                  logic_engine=ForwardChaining(tree_caching),
                   neural_predicates=neural_predicates,
                   label_semantics=SumProductSemiring(),use_nn_caching=use_nn_caching)
 
