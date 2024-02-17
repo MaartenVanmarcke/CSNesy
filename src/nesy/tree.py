@@ -134,9 +134,10 @@ class FactNode(LeafNode):
             - the weight of this node if this fact is positive; 
             - the negation of the weight of this node if this fact is negative.
         """
+        res = self.weight * torch.ones((tensor_sources["images"].size()[0]))
         if not self.positive:
-            return semantics.negation(self.weight)
-        return self.weight
+            return semantics.negation(res)
+        return res
 
 class NeuralNode(LeafNode):
     ''' 

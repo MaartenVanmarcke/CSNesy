@@ -1,6 +1,6 @@
 from dataset import Dataset, DataLoader
 from dataset import AdditionTask
-from nesy.logic_optimized import ForwardChaining
+from nesy.logic import ForwardChaining
 from nesy.parser import parse_program
 
 task_train = AdditionTask(n_classes=2)
