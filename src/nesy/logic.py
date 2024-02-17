@@ -176,20 +176,19 @@ class ForwardChaining(LogicEngine):
         ## New: keep track of the atomic sentences that were added in the previous iteration,
         # This will be necessary to check if a derivation is a new one or not.
         last = {}
-        print(atomicSentences)
-        print(KB)
+        
         # Repeat until new is empty
         while len(new.keys())>0:
             
             # new <- {}
             new = {}
+
             # For each rule in KB do
             for rule in KB: # Remark: I do not look at atomic sentences
                 
                 # (p1 ^ p2 ^ ... ^ pn => q) <- Standardize-Variables(rule)
                 updatedRule = self._standardize_variables(rule, {})
 
-                #print(len(list(product(self._aux(atomicSentences), repeat=len(updatedRule.body)))))
                 #print(len(self._remove_duplicates(list(product(self._aux(atomicSentences), repeat=len(updatedRule.body))))))
                 # For each theta such that Subst(theta, p1 ^ p2 ^ ... ^ pn) = Subst(theta, p1' ^ p2' ^ ... ^ pn') for some p1', p2', ..., pn' in KB
                 for ps in list(product(self._aux(atomicSentences), repeat=len(updatedRule.body))): #TODO: his self._aux(atomicSentences) leads to the infinite loop (it is very long)!

@@ -132,7 +132,6 @@ class ForwardChaining(LogicEngine):
                 #for ps in list(product(self._aux(atomicSentences), repeat=len(updatedRule.body))):
                 #    subst = self.unifier.unifyMultiple(updatedRule.body, list(ps)) # Remark: I take the most general theta.
                 for subst in self._findEachTheta(updatedRule.body, structuredAtomicSentences):
-
                     if subst != None:
                         # q' <- Subst(theta, q)
                         newAtom = self.substituer.substitution(subst, updatedRule.head)
@@ -225,7 +224,7 @@ class ForwardChaining(LogicEngine):
                 return []
             lengths.append(len(atoms[str(condition.functor)]))
 
-        body = [i for _,i in sorted(zip(lengths,body))]
+        # body = [i for _,i in sorted(zip(lengths,body))]
             
         un = Unifier()
         su = Substituer()

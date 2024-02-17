@@ -8,3 +8,17 @@ lightning_logs/
 logs/
 __pycache__/
 src/nesy/temp.py
+figures/csvToPlot.py
+figures/csvToPlotClasses.py
+figures/csvToPlotClassesOpt1.py
+figures/csvToPlotClassesOpt2.py
+figures/csvToPlotSemantics.py
+figures/img/Opt1.png
+figures/img/Opt2.png
+figures/img/TrainLossSemantics.png
+figures/img/TrainLossSemanticsWithoutLuka.png
+figures/img/TrainTimeClasses.png
+figures/csvToPlot.py
+figures/csvToPlotSemantics.py
+figures/img/TrainLossSemantics.png
+figures/img/TrainLossSemanticsWithoutLuka.png
