@@ -53,23 +53,24 @@ class NeSyModel(pl.LightningModule):
 
     def forward(self, tensor_sources: Dict[str, torch.Tensor],  queries: List[Term] | List[List[Term]],caching=False):
        
-        #STEP 1: return and or tree
-        # >> STEP 1A: in the case of training, the queries are List[Term]
+        #CASE A: training step if the queries are of type  List[Term]
         if isinstance(queries[0], Term):
+            # STEP A.1: construct all the and-or-trees for all given queries
             and_or_tree = self.logic_engine.reason(self.program, queries)
-        # >> STEP 2A: evaluate every tree given the images in tensor_sources
+            # STEP A.2: evaluate all queries with the images and the constructed trees 
             return self.evaluator.evaluate(tensor_sources, and_or_tree, queries)
 
-        # >> STEP 1B: in the case of testing, the queries are List[List[Term]]
+        #CASE B: validation step 
         else:
+            # STEP B.1: construct all the and-or-trees for every given query. 
+            # >>> Since the queries in a validation step are of type List[List[Term]] we first flatten them
             and_or_tree = self.logic_engine.reason(self.program, list( chain.from_iterable(queries))) 
-        # >> STEP 2A: evaluate every tree given the images in tensor_sources
+            # STEP B.2: evaluate all queries with the images and the constructed trees 
             return self.evaluator.evaluate(tensor_sources, and_or_tree, queries)
         
     def training_step(self, I, batch_idx):
-        tensor_sources, queries, y_true = I         #y true is always 1 in the case of training -> the training queries are true
+        tensor_sources, queries, y_true = I    
         # STEP 1: calculate the outputs of the model given the queries and the tensor_sources. The result is a list of lists. 
-        # The length of the list is equal to the number of queries and the length of the "inner lists" is equal to the number of tensor_sources
         y_preds = self.forward(tensor_sources, queries) 
         # STEP 2: put the y_preds and y_true in the correct format
         correct_size_y_preds =  torch.vstack(y_preds)
@@ -81,17 +82,10 @@ class NeSyModel(pl.LightningModule):
 
 
     def validation_step(self, I, batch_idx):
-        # print("validating")
         tensor_sources, queries, y_true = I    
-        # the true y (of y_trues) gives the index of the correct query (of queries)
-        #for example: for the queries = ([addition(tensor(images,0),tensor(images,1),0), addition(tensor(images,0),tensor(images,1),1), addition(tensor(images,0),tensor(images,1),2)], [addition(tensor(images,0),tensor(images,1),0), addition(tensor(images,0),tensor(images,1),1), addition(tensor(images,0),tensor(images,1),2)]) 
-        # with y_true = tensor([2, 1])
-        #this means that addition(tensor(images,0),tensor(images,1),2) and addition(tensor(images,0),tensor(images,1),1) are correct
-
-        nb_images_per_batch = next(iter(tensor_sources.values())).size()[0]
         #STEP 1: calculate the outcome of the model
         y_preds = self.forward(tensor_sources, queries)
-        #STEP 2: reorder the y_preds: select for group of queries the prediction with the highest probability. Do this for every image
+        #STEP 2: Calculate the accuracy after extracting the predicted value. 
         accuracy = accuracy_score(torch.argmax(y_preds, dim = 1), y_true)  
         self.log("test_acc", accuracy, on_step=True, on_epoch=True)
         return accuracy
