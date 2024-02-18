@@ -8,26 +8,19 @@ class Evaluator():
         self.label_semantics = label_semantics
         self.use_nn_caching =  use_nn_caching
 
-    def evaluate(self, tensor_sources, and_or_tree, queries):   #queries actually not needed
-        # print("NB OF TREES:", (len(and_or_trees)))
-        # print("NB OF IMAGES:",  tensor_sources["images"].size())
-        # print("queries")
-        # for i in range(len(queries)):
-        #     print(queries[i])
-        #     print(and_or_trees[i])
-        #     print("-------")
-        # for tree in and_or_trees:
-        #     print(">>>> ", tree.evaluate(tensor_sources,self.label_semantics,self.neural_predicates))
-        
-        # print(">> trees toghether: ", [tree.evaluate(tensor_sources,self.label_semantics,self.neural_predicates) for tree in and_or_trees] )
+    def evaluate(self, tensor_sources, and_or_tree, queries): 
         eval_result = and_or_tree.evaluate(tensor_sources,self.label_semantics,self.neural_predicates,self.use_nn_caching)
+
+        # Training phase
         if isinstance(queries[0], Term):
             res = []
             for i in range(len(queries)):
                 # Only return the evaluation of the asked query, not of every possible query
+                # The and_or_tree keeps the order of the queries, so use it to find the index
                 res.append(eval_result[i][and_or_tree.findQuery(queries[i])])
             return res
 
+        # Testing phase
         else:
             res = torch.zeros_like(eval_result)
             for i in range(eval_result.size()[1]):

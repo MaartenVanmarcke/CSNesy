@@ -27,12 +27,12 @@ task_test = AdditionTask(n=n_digits,n_classes=n_classes, train=False)
 neural_predicates = torch.nn.ModuleDict({"digit": MNISTEncoder(task_train.n_classes)})
 
 # STEP 3: define which caching you will use
-tree_caching = False
-use_nn_caching = False
+tree_caching = True
+use_nn_caching = True
 
 #STEP 4: define if a validation set during training will be used to see the accuracy evolve over training
 # >> BUT if used, adds a lot of operations so makes the program a lot slower
-use_validation_set = False   
+use_validation_set = True   
 
 #STEP 5: define the model + trainer +batch size
 model = NeSyModel(program=task_train.program,
