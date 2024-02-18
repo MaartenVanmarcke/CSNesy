@@ -39,7 +39,6 @@ class LukasieviczTNorm(Semantics):
        return (1-a)
 
 class GodelTNorm(Semantics):
-    # TODO: Implement this
 
     def conjunction(self, a, b):
         return torch.minimum(a,b)

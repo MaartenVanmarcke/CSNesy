@@ -191,7 +191,7 @@ class ForwardChaining(LogicEngine):
 
                 #print(len(self._remove_duplicates(list(product(self._aux(atomicSentences), repeat=len(updatedRule.body))))))
                 # For each theta such that Subst(theta, p1 ^ p2 ^ ... ^ pn) = Subst(theta, p1' ^ p2' ^ ... ^ pn') for some p1', p2', ..., pn' in KB
-                for ps in list(product(self._aux(atomicSentences), repeat=len(updatedRule.body))): #TODO: his self._aux(atomicSentences) leads to the infinite loop (it is very long)!
+                for ps in list(product(self._aux(atomicSentences), repeat=len(updatedRule.body))):
                     subst = self.unifier.unifyMultiple(updatedRule.body, list(ps)) # Remark: I take the most general theta.
 
                     if subst != None:
@@ -329,7 +329,6 @@ class ForwardChaining(LogicEngine):
                 if rule.weight == None:
                     res[str(rule.term)] = (rule.term, FactNode(1, True, str(rule.term)))
                 elif rule.weight.functor == "nn":
-                    # TODO: the model is just a string right now, we need to pass this later on!!!
                     res[str(rule.term)] = (rule.term, NeuralNode(rule.weight.arguments[0], rule.weight.arguments[1].arguments[1], rule.weight.arguments[2], name=str(rule.term)))
                 else:
                     res[str(rule.term)] = (rule.term, FactNode(float(str(rule.weight)), name = str(rule.term)))

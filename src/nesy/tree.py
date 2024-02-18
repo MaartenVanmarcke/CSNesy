@@ -125,7 +125,7 @@ class FactNode(LeafNode):
 
     def __repr__(self) -> str:
         res ="- " +  str(self.__class__.__name__) + " : " + self.name
-        res += "\n\t - " + str(self.weight) + "\n\t - " + str(self.positive) # TODO
+        res += "\n\t - " + str(self.weight) + "\n\t - " + str(self.positive)
         return res
 
     def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates,nn_results_cache:dict|None):
@@ -145,7 +145,7 @@ class NeuralNode(LeafNode):
     Such a leaf node has a network model, an index that denodes which tensor is the input of this node 
      and a query that denotes for which result of the network we want the probability.
     '''
-    def __init__(self, model: Module, index: int, query, name:str="") -> None: #TODO I think module should actually be string (defined in "logic") = name of NN
+    def __init__(self, model: Module, index: int, query, name:str="") -> None:
         super().__init__(name)
         self.model=model
         if isinstance(model, str):
@@ -191,7 +191,6 @@ class NeuralNode(LeafNode):
 
         #STEP 6: return the relevant prediction 
         return pred_of_network[:, self.query]   
-        ## TODO: how to check if it is between 0 and 1? -> always the case since a softmax is the last layer of the nn
 
 
 class AndOrTree():
