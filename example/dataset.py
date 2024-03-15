@@ -123,6 +123,8 @@ class AdditionTask(Dataset):
             tensor_sources = {"images": images}
 
             return tensor_sources, query, torch.tensor([1.0])
+        
+        # For testing/validation set
         else:
             # In MNIST Addition, testing queries for a single pair of images check for all possible sums.
             # In this way, we can compute the most probable sum.
@@ -142,7 +144,8 @@ class AdditionTask(Dataset):
             #            for z in range(self.n_classes * 2 - 1)]
             tensor_sources = {"images": images}
 
-            return tensor_sources, queries, target
+            #instead of only giving target (=sum of all images), also give targets to be able to calculate the accuracy of individual images
+            return tensor_sources, queries, [target,targets]
 
     def dataloader(self, batch_size=2, shuffle=None, num_workers=0):
         if shuffle is None:

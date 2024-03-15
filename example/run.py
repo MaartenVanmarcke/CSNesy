@@ -18,7 +18,7 @@ logger = TensorBoardLogger(save_dir="logs/", name="model")
 
 # STEP 1: define the desired n_digits and n_classes
 n_digits = 2
-n_classes = 2
+n_classes = 4
 
 #STEP 2: construct the train, test-set and the neural_predicates
 task_train = AdditionTask(n=n_digits,n_classes=n_classes)
