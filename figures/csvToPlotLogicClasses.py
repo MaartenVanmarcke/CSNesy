@@ -45,7 +45,6 @@ ylabel = "Elapsed time (s)"
 savename = "figures\img\LogicTimeClasses.png"
 
 
-plt.figure()
 fig, ax = plt.subplots(layout='constrained')
 
 xs =np.arange(len(classes))
@@ -54,11 +53,23 @@ multiplier = 0
 
 # code inspired by https://matplotlib.org/stable/gallery/lines_bars_and_markers/barchart.html#sphx-glr-gallery-lines-bars-and-markers-barchart-py
 for k, v in times.items():
+    if k == "A Tree per Batch":
+        v0 = v.copy()
+    else:
+        v1 = v.copy()
+        for i in range(len(v0)):
+            v1[i] = v1[i]/v0[i]
     offset = width * multiplier
     rects = ax.bar(xs+offset, v, width, label = k)
+    ax.set_yscale('log')
     #ax.bar_label(rects, padding=3)
     multiplier +=1
 
+offset = width * multiplier
+rects = ax.bar(xs+offset, v1, width, label = "division")
+ax.set_yscale('log')
+ax.bar_label(rects, padding=3)
+multiplier +=1
 
 plt.title(title)
 plt.xlabel(xlabel)
@@ -66,5 +77,9 @@ plt.ylabel(ylabel)
 ax.set_xticks(xs + width, classes)
 plt.legend()
 plt.grid()
+plt.show()
 plt.savefig(savename)
 plt.close()
+
+a = np.asarray(v1)
+print(np.mean(a), np.std(a))
