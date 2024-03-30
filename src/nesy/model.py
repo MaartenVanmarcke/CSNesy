@@ -65,8 +65,9 @@ class NeSyModel(pl.LightningModule):
             # STEP B.1: construct all the and-or-trees for every given query. 
             # >>> Since the queries in a validation step are of type List[List[Term]] we first flatten them
             and_or_tree = self.logic_engine.reason(self.program, list( chain.from_iterable(queries))) 
-            # STEP B.2: evaluate all queries with the images and the constructed trees 
-            return self.evaluator.evaluate(tensor_sources, and_or_tree, queries)
+            # STEP B.2: evaluate all queries with the images and the constructed trees  + all the predictions per image
+            return self.evaluator.evaluate(tensor_sources, and_or_tree, queries),self.evaluator.evaluate_for_images(tensor_sources)
+            
         
     def training_step(self, I, batch_idx):
         tensor_sources, queries, y_true = I    
@@ -82,13 +83,24 @@ class NeSyModel(pl.LightningModule):
 
 
     def validation_step(self, I, batch_idx):
-        tensor_sources, queries, y_true = I    
+        tensor_sources, queries, [y_true, ys_trues] = I   
         #STEP 1: calculate the outcome of the model
-        y_preds = self.forward(tensor_sources, queries)
-        #STEP 2: Calculate the accuracy after extracting the predicted value. 
-        accuracy = accuracy_score(torch.argmax(y_preds, dim = 1), y_true)  
-        self.log("test_acc", accuracy, on_step=True, on_epoch=True)
-        return accuracy
+        y_preds,pred_images = self.forward(tensor_sources, queries)
+        #STEP 2: Calculate the accuracy after extracting the predicted value.
+        accuracy_sum = accuracy_score(torch.argmax(y_preds, dim = 1), y_true)  
+        
+        accuracy_indiv_images = 0
+        for i_image in range(len(pred_images)):
+            pred_digit = torch.argmax(pred_images[i_image], dim = 1)
+            accuracy_indiv_images += accuracy_score(pred_digit, ys_trues[:,i_image])
+            
+        accuracy_indiv_images = accuracy_indiv_images/len(pred_images)
+
+
+        self.log("test_acc_sum", accuracy_sum, on_step=True, on_epoch=True)
+        self.log("accuracy_indiv_images", accuracy_indiv_images, on_step=True, on_epoch=True)
+
+        return accuracy_sum
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(self.parameters(), lr=self.learning_rate)

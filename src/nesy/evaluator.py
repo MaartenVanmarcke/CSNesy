@@ -26,3 +26,19 @@ class Evaluator():
             for i in range(eval_result.size()[1]):
                 res[:,i] = eval_result[:, and_or_tree.findQuery(queries[0][i])]
             return res
+        
+    # this is only used for validation purpose
+    def evaluate_for_images(self, tensor_sources): 
+        """
+        This function is specifically used for testing and validation purposes. 
+        The function returns the predicted meanings of the given images.
+        """
+        meaning_images =[]
+        for image_i in range(tensor_sources["images"].shape[1]):
+            image =tensor_sources["images"][:,image_i]
+            network = self.neural_predicates["digit"]
+            #STEP 4: get the predictions of the NN: this is the probability that the image belongs to every class 
+            pred_of_network = network.forward(image)
+            meaning_images.append(pred_of_network)
+        return meaning_images
+            

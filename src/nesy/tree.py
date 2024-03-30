@@ -181,6 +181,8 @@ class NeuralNode(LeafNode):
 
         #STEP 3: select the image from the tensor_sources
         image =tensor_sources["images"][:,self.index]
+        # print("SELF INDEX=", self.index)
+        # print("SHAPE IMAGE REAL=", image.shape)
 
         #STEP 4: get the predictions of the NN: this is the probability that the image belongs to every class 
         pred_of_network = network.forward(image)
