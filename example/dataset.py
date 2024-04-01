@@ -133,7 +133,7 @@ class AdditionTask(Dataset):
             # Therefore, we have a List[List[Term]], each element of the outer list correspond to a single pair of
             # images. Each element of the inner list correspond to a possible sum.
             queries = []
-            for z in range(self.n_classes * 2 - 1):
+            for z in range(self.num_digits * (self.n_classes - 1) + 1):
 
                 terms = "addition("
                 for i in range(self.num_digits):
