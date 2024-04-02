@@ -18,7 +18,7 @@ logger = TensorBoardLogger(save_dir="logs/", name="model")
 
 # STEP 1: define the desired n_digits and n_classes
 n_digits = 2
-n_classes = 2
+n_classes = 3
 
 #STEP 2: construct the train, test-set and the neural_predicates
 task_train = BaseConverter(n=n_digits,n_classes=n_classes)
@@ -33,7 +33,7 @@ use_nn_caching = True
 #STEP 4: define if a validation set during training will be used to see the accuracy evolve over training
 # >> BUT if used, adds a lot of operations so makes the program a lot slower
 use_validation_set = False
-additional_logs_per_class = True
+additional_logs_per_class = False
 #STEP 5: define the model + trainer +batch size
 model = NeSyModel(program=task_train.program,
                   logic_engine=ForwardChaining(tree_caching),
