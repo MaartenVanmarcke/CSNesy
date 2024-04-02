@@ -66,6 +66,9 @@ class NeSyModel(pl.LightningModule):
             # >>> Since the queries in a validation step are of type List[List[Term]] we first flatten them
             and_or_tree = self.logic_engine.reason(self.program, list( chain.from_iterable(queries))) 
             # STEP B.2: evaluate all queries with the images and the constructed trees  + all the predictions per image
+            #a = self.evaluator.evaluate(tensor_sources, and_or_tree, queries)
+            #b = torch.sum(a, dim = 1)
+            #print(b, b.shape)
             return self.evaluator.evaluate(tensor_sources, and_or_tree, queries),self.evaluator.evaluate_for_images(tensor_sources)
             
         

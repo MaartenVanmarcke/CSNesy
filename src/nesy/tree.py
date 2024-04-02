@@ -88,7 +88,7 @@ class ANDNode(InternalNode):
 
     def evaluate(self, tensor_sources: Tensor, semantics: Semantics,neural_predicates:torch.nn.ModuleDict,nn_results_cache:dict|None):
         """
-        The evaluation of an AND node consists of the evaluation of both child nodes and a condjunction of their results as specified by the given semantics.
+        The evaluation of an AND node consists of the evaluation of both child nodes and a conjunction of their results as specified by the given semantics.
         """
         res1 = self.child1.evaluate(tensor_sources, semantics,neural_predicates,nn_results_cache)
         res2 = self.child2.evaluate(tensor_sources, semantics,neural_predicates,nn_results_cache)

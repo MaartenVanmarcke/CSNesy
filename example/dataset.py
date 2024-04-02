@@ -20,6 +20,27 @@ def custom_collate(batch):
     batch = tuple(zip(*batch))
     return default_collate(batch[0]), batch[1], default_collate(batch[2])
 
+class Gener:
+    def __init__(self, num_digits):
+        self.num_digits = num_digits
+        self.lst = self.generateList()
+        self.lst.pop(0)
+
+    def generateList(self):
+        return self._generateList(0, [[]])
+
+    def _generateList(self, curr, ax):
+        if curr == self.num_digits:
+            return ax
+        lst = []
+        for i in ax:
+            lst.append([0]+i)
+            lst.append([1]+i)
+        return self._generateList(curr+1, lst)
+
+    def __iter__(self):
+        return self.lst.__iter__()
+
 
 class AdditionTask(Dataset):
 
@@ -177,50 +198,8 @@ class BaseConverter(Dataset):
         # the base is the first digit
         for x,y in  MNIST('data/MNIST/', train=train, download=True, transform=transform):
             if y < n_classes:
-                if base>0:
-                    # print("Trying to add an y...")
-                    if y<base:
-                        # print("!the new y", y)
-                        aux_images.append(x)
-                        aux_targets.append(y)
-                else:
-                    aux_images.append(x)
-                    aux_targets.append(y)
-                
-                if( base == 0 and len(aux_targets)==n+1) or ( base > 0 and len(aux_targets)==n):
-                    if base == 0:
-                        base_i = np.argmax(aux_targets)
-                        base =  np.max(aux_targets)
-                        image_base = aux_images[base_i]
-                        aux_targets.pop(base_i)
-                        aux_images.pop(base_i)
-                        # print("THE CHOSEN BASE IS=", base)
-                        # print("with first digits=", aux_targets)
-                    for k in range(len(aux_targets)):
-                        # print("the current k=", k, "with value",aux_targets[k])
-                        if aux_targets[k]>=base:
-                            # print("K was too large! deleted")
-                            aux_targets.pop(k)
-                            aux_images.pop(k)
-                            break
-                    if len(aux_targets)==n:
-                        # print("succesful digits!", aux_targets, "with base", base)
-                        self.original_images.append(image_base)
-                        self.original_targets.append(base)
-                        self.original_images.extend(aux_images)
-                        self.original_targets.extend(aux_targets)
-                        # print("extended ")
-                        # print(self.original_targets)
-                        for i in aux_targets:
-                            if i >= base:
-                                raise Exception("wiiiiiiiiii")
-
-                        aux_targets = []
-                        aux_images = []
-                        base =0
-                        
-
-        
+                self.original_images.append(x)
+                self.original_targets.append(y)
         self.original_images = torch.stack(self.original_images)
         self.original_targets = torch.tensor(self.original_targets)
 
@@ -252,12 +231,13 @@ class BaseConverter(Dataset):
             program_string +=f"X_{str(i)},"
             program_string_helper += f"digit(X_{i},N_{i}), "
             vars.append(f'N_{i}')
+        dummy = program_string
         program_string += "Z):- "
         # >> add the digit-declarations to the program string
         program_string += program_string_helper
 
         for i in range(self.num_digits-1):
-            program_string += f"compare(N_B_1, N_{i}), "
+            program_string += f"gt(N_B_1, N_{i}), "
         # STEP 3 -> Part 3
         # >> create intermediate results, (add 2 of the elements in vars) until there are only 2 elements left. Since then they will lead to the final result
         # >> The form if this intermediate result is add(N_0,N_1,Z_0) or add(Z_0,N_2,Z_1)
@@ -280,12 +260,26 @@ class BaseConverter(Dataset):
 
         # STEP 4-> Part 4: depends on self.num_digits and self.n_classes
         # >> STEP 4.1: first calculate the maximum value a term can consist of before the final addition
-        max_value_term = (self.n_classes-1)**(self.num_digits-1)-1
+        max_value_term = (self.n_classes-1)**(self.num_digits-1)-1#+1
+        self.max_value_term = max_value_term
         # >> STEP 4.2: construct all the add(_,_,_)
         for x in range(max_value_term+1):
             for y in range(max_value_term+1):
-                     if x + y <= max_value_term:
+                     #if x + y <= max_value_term:
                         program_string += "\n".join([f"add({x}, {y}, {x + y})."] )
+
+        for lst in Gener(self.num_digits-1):
+            program_string += dummy
+            program_string += f"{max_value_term+1}):- "
+            for j in range(self.num_digits-1):
+                program_string += f"digit(X_{j},N_{j}), "
+            for j in range(self.num_digits-1):
+                if lst[j] > 0:
+                    program_string += f"geq(N_{j},N_B), "
+                else:
+                    program_string += f"gt(N_B,N_{j}), "
+            program_string += f"digit(X_B,N_B). "
+
 
 
         # multiply
@@ -298,7 +292,11 @@ class BaseConverter(Dataset):
 
         for x in range(n_classes):
             for y in range(x):
-                        program_string += "\n".join([f"compare({x}, {y})."] )
+                        program_string += "\n".join([f"gt({x}, {y})."] )
+                        
+        for x in range(n_classes):
+            for y in range(x+1):
+                        program_string += "\n".join([f"geq({x}, {y})."] )
         
         program_string += "\n"
         # STEP 5 -> Part 5
@@ -320,10 +318,13 @@ class BaseConverter(Dataset):
         images = self.original_images[index * self.num_digits: (index + 1) * self.num_digits]
         targets = self.original_targets[index * self.num_digits: (index + 1) * self.num_digits]
         # print("targets", targets)
-        if targets[0]==1:
+        if targets[0]==1 and np.all(np.array(targets[1:]) == 0):
             target = 0
         else:
-            target = int("".join([str(i.item()) for i in targets[1:]]), targets[0])
+            try:
+                target = int("".join([str(i.item()) for i in targets[1:]]), targets[0])
+            except Exception:
+                target = self.max_value_term + 1
 
         if self.train:
             # In MNIST Addition, training queries for a single pair of images check for a given sum (i.e. the target)
@@ -349,7 +350,7 @@ class BaseConverter(Dataset):
             # Therefore, we have a List[List[Term]], each element of the outer list correspond to a single pair of
             # images. Each element of the inner list correspond to a possible sum.
             queries = []
-            for z in range(self.n_classes * 2 - 1):
+            for z in range((self.n_classes-1)**(self.num_digits-1)+1):
 
                 terms = "baseConverter("
                 for i in range(self.num_digits):
