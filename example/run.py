@@ -32,13 +32,14 @@ use_nn_caching = True
 
 #STEP 4: define if a validation set during training will be used to see the accuracy evolve over training
 # >> BUT if used, adds a lot of operations so makes the program a lot slower
-use_validation_set = False   
-
+use_validation_set = False
+additional_logs_per_class = True
 #STEP 5: define the model + trainer +batch size
 model = NeSyModel(program=task_train.program,
                   logic_engine=ForwardChaining(tree_caching),
                   neural_predicates=neural_predicates,
-                  label_semantics=SumProductSemiring(),use_nn_caching=use_nn_caching)
+                  label_semantics=SumProductSemiring(),use_nn_caching=use_nn_caching,n_classes=n_classes,nb_solutions=task_train.max_value_term+2,
+                  additional_logs_per_class=additional_logs_per_class)
 
 if use_validation_set:
     trainer = pl.Trainer(max_epochs=1,logger=logger,log_every_n_steps=1,val_check_interval=1)

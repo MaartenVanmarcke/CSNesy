@@ -318,8 +318,14 @@ class BaseConverter(Dataset):
         images = self.original_images[index * self.num_digits: (index + 1) * self.num_digits]
         targets = self.original_targets[index * self.num_digits: (index + 1) * self.num_digits]
         # print("targets", targets)
-        if targets[0]==1 and np.all(np.array(targets[1:]) == 0):
-            target = 0
+        if targets[0]==1:
+            if np.all(np.array(targets[1:]) == 0):
+                target = 0
+            else:
+                target = self.max_value_term + 1
+
+        elif targets[0]==0:
+            target = self.max_value_term + 1
         else:
             try:
                 target = int("".join([str(i.item()) for i in targets[1:]]), targets[0])
