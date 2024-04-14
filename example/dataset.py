@@ -60,6 +60,7 @@ class AdditionTask(Dataset):
 
         self.n_classes = n_classes # number of possible results of the sum
         self.num_digits = n  # number of digits to sum together
+        self.nb_solutions=self.num_digits*(self.n_classes-1)+1
 
         # GOAL construct the program_string that consists of multiple parts
         # >> Part 1: addition(X_0,...,X_i,Z):-  (-> where i is the n_digits)
@@ -206,7 +207,6 @@ class BaseConverter(Dataset):
 
         self.n_classes = n_classes 
         self.num_digits = n  + 1 # because the base is another given image-input
-
         # GOAL construct the program_string that consists of multiple parts
         # >> Part 1: addition(X_0,...,X_i,Z):-  (-> where i is the n_digits)
         # >> Part 2: digit(X_0,N_0), digit(...,...), digit(X_i,N_i), 
@@ -262,6 +262,8 @@ class BaseConverter(Dataset):
         # >> STEP 4.1: first calculate the maximum value a term can consist of before the final addition
         max_value_term = (self.n_classes-1)**(self.num_digits-1)-1#+1
         self.max_value_term = max_value_term
+        self.nb_solutions=max_value_term+2
+
         # >> STEP 4.2: construct all the add(_,_,_)
         for x in range(max_value_term+1):
             for y in range(max_value_term+1):

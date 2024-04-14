@@ -41,7 +41,7 @@ class NeSyModel(pl.LightningModule):
                  neural_predicates: torch.nn.ModuleDict,
                  logic_engine: LogicEngine,
                  label_semantics: Semantics,
-                 learning_rate = 0.001, n_classes=2, nb_solutions=3, additional_logs_per_class=False,
+                 learning_rate = 0.01, n_classes=2, nb_solutions=3, additional_logs_per_class=False,
                   use_nn_caching=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.neural_predicates = neural_predicates
@@ -132,8 +132,8 @@ class NeSyModel(pl.LightningModule):
                 self.log(nb_solution, sum_acc_per_solution[i], on_epoch=True)
 
     
-        self.log("test_acc_sum", accuracy_sum, on_epoch=True)
-        self.log("accuracy_indiv_images", accuracy_indiv_images, on_epoch=True)
+        self.log("val_acc_task", accuracy_sum, on_epoch=True)
+        self.log("val_acc_indiv_images", accuracy_indiv_images, on_epoch=True)
 
         return accuracy_sum
 
