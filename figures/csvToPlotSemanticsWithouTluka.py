@@ -7,12 +7,12 @@ import matplotlib.pyplot as plt
 
 filename = ["train_loss_semiring", "Sum Product Semiring",
             "train_loss_godel", "Gödel t-norm",
-            "train_loss_product", "Product t-norm",
-            "train_loss_lukasievicz", "Łukasiewicz t-norm"]
+            "train_loss_product", "Product t-norm"]
+            #"train_loss_lukasievicz", "Łukasiewicz t-norm"]
 title = "Training loss for different semantics"
 xlabel = "Steps"
 ylabel = "Training loss"
-savename = "figures\img\TrainLossSemantics.png"
+savename = "figures\img\TrainLossSemanticsWithoutLuka.png"
 
 
 plt.figure()

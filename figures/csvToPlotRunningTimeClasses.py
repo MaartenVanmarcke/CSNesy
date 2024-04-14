@@ -33,19 +33,16 @@ width = .2
 multiplier = 0
 
 # code inspired by https://matplotlib.org/stable/gallery/lines_bars_and_markers/barchart.html#sphx-glr-gallery-lines-bars-and-markers-barchart-py
-for i in range(len(times)):
-    offset = 0#width * multiplier
-    rects = ax.bar(xs+offset, times[i], width)
-    #ax.set_yscale('log')
-    #ax.bar_label(rects, padding=3)
-    multiplier +=1
-
+offset = 0
+rects = ax.bar(xs+offset, times, width)
+ax.set_yscale('log')
+ax.bar_label(rects, padding=3)
+plt.ylim([0,3200])
 
 plt.title(title)
 plt.xlabel(xlabel)
 plt.ylabel(ylabel)
 ax.set_xticks(xs + width, classes)
 plt.grid()
-plt.show()
 plt.savefig(savename)
 plt.close()

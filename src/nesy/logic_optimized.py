@@ -155,6 +155,9 @@ class ForwardChaining(LogicEngine):
             atomicSentences.update(new)
             structuredAtomicSentences.update(newstructuredAtomicSentences)
 
+        for m in atomicSentences.keys():
+            self.cache_of_trees[m] = atomicSentences[m][1]
+
         # Return the constructed tree for each query in queries.
         # If not tree has been constructed for a query, it means it has no derivation and thus is always false.
             # So that is equivalent to a fact node of weight 0.
